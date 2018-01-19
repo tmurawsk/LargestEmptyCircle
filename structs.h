@@ -15,7 +15,7 @@ typedef struct Point{
         x = a;
         y = b;
     }
-};
+} Point;
 
 //typedef struct Edge{
 //    double a;       //a parameter of the ray
@@ -27,21 +27,24 @@ typedef struct Point{
 //    Edge *parent;
 //};
 
+typedef struct Event Event;
+
 typedef struct Parabola{
     Point p;
     Event *event;
     Parabola *right;
     Parabola *left;
-};
+} Parabola;
 
 typedef struct Event{
-    double y;
+    Point p;
+    double radius;
 //    Edge *edge1;
 //    Edge *edge2;
     Parabola *parabola;
     Event *next;
     Event *prev;
-};
+} Event;
 
 
 
