@@ -101,7 +101,19 @@ int main() {
         if (pointIter < size && (firstEvent == nullptr || firstEvent->p.y < points[pointIter].y)) {  //site event
             //znajdujemy pod ktora parabola jest badany punkt (iteracja od firstParabola, wyliczanie a,b,c)
 
+            sweepY = points[pointIter].y;
             cout << "site event: (" << points[pointIter].x << ", " << points[pointIter].y << ")" << endl;
+            cout << "beachline: ";
+            Parabola *par = firstParabola;
+            while(par != nullptr){
+                cout << par->p.x << " | ";
+                par = par->right;
+            }
+            cout << endl;
+
+            if(points[pointIter].x == 11)
+                cout << "";
+
             if (firstParabola->right == nullptr) {  //there is only one parabola in the list
                 Parabola *parabolaCopy = new Parabola();
                 Parabola *newParabola = new Parabola();
@@ -140,81 +152,6 @@ int main() {
                         b2 = -(temp2->p.x / (2 * p));
                         c2 = (temp2->p.x * temp2->p.x / (4 * p)) + k;
 
-                        if(temp3 == nullptr){ //if there are only two parabolas
-                            x1 = (b1 - b2 - sqrt(k)) / (2 * (a2 - a1));
-                            if(points[pointIter].x < x1){ //if the point is on the left one
-                                Parabola *newParabola = new Parabola();
-                                Parabola *copy = new Parabola();
-
-                                copy->p = temp1->p;
-                                copy->right = temp1->right;
-                                copy->left = newParabola;
-
-                                newParabola->p = points[pointIter];
-                                newParabola->event = nullptr;
-                                newParabola->left = temp1;
-                                newParabola->right = copy;
-
-                                temp1->right->left = copy;
-                                temp1->right = newParabola;
-
-                                //nowy circle event temp1-new-copy(temp1)-temp2
-                                a1 = (points[pointIter].x - temp1->p.x) / (temp1->p.y - points[pointIter].y);
-                                b1 = (points[pointIter].y + temp1->p.y) / 2 - a1 * (points[pointIter].x + temp1->p.x) / 2;
-                                a2 = (temp1->p.x - temp2->p.x) / (temp2->p.y - temp1->p.y);
-                                b2 = (temp1->p.y + temp2->p.y) / 2 - a2 * (temp1->p.x + temp2->p.x) / 2;
-
-                                x1 = (b1 - b2) / (a2 - a1);
-                                y1 = a2 * x1 + b2; //crossing point
-
-                                firstEvent = new Event();
-                                firstEvent->radius = distance(Point(x1, y1), copy->p);
-                                firstEvent->p.x = x1;
-                                firstEvent->p.y = y1 - firstEvent->radius;
-                                firstEvent->prev = nullptr;
-                                firstEvent->next = nullptr;
-                                firstEvent->parabola = copy;
-                                copy->event = firstEvent;
-
-                                break;
-                            }
-                            else{ //the point is on the right one
-                                Parabola *newParabola = new Parabola();
-                                Parabola *copy = new Parabola();
-
-                                copy->p = temp2->p;
-                                copy->right = temp2->right; //nullptr
-                                copy->left = newParabola;
-
-                                newParabola->p = points[pointIter];
-                                newParabola->event = nullptr;
-                                newParabola->left = temp2;
-                                newParabola->right = copy;
-
-                                temp2->right = newParabola;
-
-                                //nowy circle event temp1-temp2-new-copy(temp2)
-                                a1 = (temp1->p.x - temp2->p.x) / (temp2->p.y - temp1->p.y);
-                                b1 = (temp1->p.y + temp2->p.y) / 2 - a1 * (temp1->p.x + temp2->p.x) / 2;
-                                a2 = (points[pointIter].x - temp2->p.x) / (temp2->p.y - points[pointIter].y);
-                                b2 = (points[pointIter].y + temp2->p.y) / 2 - a2 * (points[pointIter].x + temp2->p.x) / 2;
-
-                                x1 = (b1 - b2) / (a2 - a1);
-                                y1 = a2 * x1 + b2; //crossing point
-
-                                firstEvent = new Event();
-                                firstEvent->radius = distance(Point(x1, y1), temp2->p);
-                                firstEvent->p.x = x1;
-                                firstEvent->p.y = y1 - firstEvent->radius;
-                                firstEvent->prev = nullptr;
-                                firstEvent->next = nullptr;
-                                firstEvent->parabola = temp2;
-                                temp2->event = firstEvent;
-
-                                break;
-                            }
-                        }
-
                         k = (temp3->p.y + sweepY) / 2;
                         p = (temp3->p.y - sweepY) / 2;
                         a3 = 1 / (4 * p);
@@ -233,10 +170,20 @@ int main() {
                         b3 = -(temp3->p.x / (2 * p));
                         c3 = (temp3->p.x * temp3->p.x / (4 * p)) + k;
                     }
+                    if(points[pointIter].x == 11 && temp1->p.x == -10)
+                        cout << "";
                     //obliczenie przeciecia parabol
                     k = (b2 - b1) * (b2 - b1) - 4 * (a2 - a1) * (c2 - c1);
-                    x1 = (b1 - b2 - sqrt(k)) / (2 * (a2 - a1));
-                    x2 = (b2 - b3 + sqrt(k)) / (2 * (a3 - a2));
+                    //if(temp1->p.y > temp2->p.y)
+                        x1 = (b1 - b2 - sqrt(k)) / (2 * (a2 - a1));
+                    //else
+                        //x1 = (b1 - b2 + sqrt(k)) / (2 * (a2 - a1));
+
+                    k = (b3 - b2) * (b3 - b2) - 4 * (a3 - a2) * (c3 - c2);
+                    //if(temp2->p.y > temp3->p.y)
+                        x2 = (b2 - b3 - sqrt(k)) / (2 * (a3 - a2));
+                    //else
+                        //x2 = (b2 - b3 + sqrt(k)) / (2 * (a3 - a2));
 
                     if (points[pointIter].x >= x1 && points[pointIter].x <= x2) { //found the parabola
                         //bierzemy points->parabola, wstawiamy do listy nowy punkt, usuwamy obecny circle event, obliczamy circle event
@@ -298,6 +245,7 @@ int main() {
 
                         Event *newEvent1 = new Event();
                         Event *newEvent2 = new Event();
+
                         newEvent1->radius = distance(Point(x1, y1), temp2->p);
                         newEvent1->p.x = x1;
                         newEvent1->p.y = y1 - newEvent1->radius;
@@ -306,18 +254,44 @@ int main() {
                         newEvent2->p.x = x2;
                         newEvent2->p.y = y2 - newEvent2->radius;
                         newEvent2->parabola = copy;
-                        temp2->event = newEvent1;
-                        copy->event = newEvent2;
 
-                        if(firstEvent == nullptr){
-                            firstEvent = newEvent1;
-                            firstEvent->next = nullptr;
-                            firstEvent->prev = nullptr;
+                        if(temp1->p.x < temp2->p.x){
+                            temp2->event = newEvent1;
+                            if(newEvent1->p.y <= sweepY) {
+                                if (firstEvent == nullptr) {
+                                    firstEvent = newEvent1;
+                                    firstEvent->next = nullptr;
+                                    firstEvent->prev = nullptr;
+                                } else
+                                    insertEvent(firstEvent, newEvent1);
+                            }
+                            else
+                                delete newEvent1;
                         }
                         else
-                            insertEvent(firstEvent, newEvent1);
+                            delete newEvent1;
 
-                        insertEvent(firstEvent, newEvent2);
+
+                        if(temp2->p.x < temp3->p.x){
+                            copy->event = newEvent2;
+                            if(newEvent2->p.y <= sweepY) {
+                                if (firstEvent == nullptr) {
+                                    firstEvent = newEvent2;
+                                    firstEvent->next = nullptr;
+                                    firstEvent->prev = nullptr;
+                                } else
+                                    insertEvent(firstEvent, newEvent2);
+                            }
+                            else
+                                delete newEvent2;
+                        }
+                        else
+                            delete newEvent2;
+
+//                        if(newEvent2->p.y <= sweepY)
+//                            insertEvent(firstEvent, newEvent2);
+//                        else
+//                            delete newEvent2;
 
                         break;
                     } else if (temp1->left == nullptr &&
@@ -352,13 +326,16 @@ int main() {
                         newEvent->parabola = copy;
                         copy->event = newEvent;
 
-                        if(firstEvent == nullptr){
-                            firstEvent = newEvent;
-                            firstEvent->next = nullptr;
-                            firstEvent->prev = nullptr;
+                        if(newEvent->p.y <= sweepY) {
+                            if (firstEvent == nullptr) {
+                                firstEvent = newEvent;
+                                firstEvent->next = nullptr;
+                                firstEvent->prev = nullptr;
+                            } else
+                                insertEvent(firstEvent, newEvent);
                         }
                         else
-                            insertEvent(firstEvent, newEvent);
+                            delete newEvent;
 
                         break;
                     } else if (temp3->right == nullptr) { //if point is on the right of the last Parabola
@@ -391,14 +368,16 @@ int main() {
                         newEvent->parabola = temp3;
                         temp3->event = newEvent;
 
-
-                        if(firstEvent == nullptr){
-                            firstEvent = newEvent;
-                            firstEvent->next = nullptr;
-                            firstEvent->prev = nullptr;
+                        if(newEvent->p.y <= sweepY) {
+                            if (firstEvent == nullptr) {
+                                firstEvent = newEvent;
+                                firstEvent->next = nullptr;
+                                firstEvent->prev = nullptr;
+                            } else
+                                insertEvent(firstEvent, newEvent);
                         }
                         else
-                            insertEvent(firstEvent, newEvent);
+                            delete newEvent;
 
                         break;
                     }
@@ -410,9 +389,71 @@ int main() {
             pointIter++;
             if(firstEvent == nullptr)
                 cout << "JEST NULLEM" << endl;
+
+            cout << "beachline2: ";
+            par = firstParabola;
+            while(par != nullptr){
+                cout << par->p.x << " | ";
+                par = par->right;
+            }
+            cout << endl;
         } else if(pointIter == size || firstEvent->p.y >= points[pointIter].y) { //circle event
             sweepY = firstEvent->p.y;
+            //TODO usun kazdy event zwiazany z krawedzia, ktora zostala uzyta do stworzenia aktualnego kola
+
             Parabola *parabola = firstEvent->parabola;
+
+            //usuwamy obecny circle event
+            /*Event *oldEvent = parabola->left->event;
+            if(oldEvent != nullptr) {
+                if (oldEvent->prev == nullptr && oldEvent->next != nullptr) { //first
+                    firstEvent = oldEvent->next;
+                    firstEvent->prev = nullptr;
+                    oldEvent->next = nullptr;
+                    oldEvent->parabola = nullptr;
+                } else if (oldEvent->next == nullptr && oldEvent->prev != nullptr) { //last
+                    oldEvent->prev->next = nullptr;
+                    oldEvent->prev = nullptr;
+                    oldEvent->parabola = nullptr;
+                } else if (oldEvent->next == nullptr && oldEvent->prev == nullptr) { //lone
+                    firstEvent = nullptr;
+                    oldEvent->parabola = nullptr;
+                } else { //in the middle
+                    oldEvent->next->prev = oldEvent->prev;
+                    oldEvent->prev->next = oldEvent->next;
+                    oldEvent->next = nullptr;
+                    oldEvent->prev = nullptr;
+                    oldEvent->parabola = nullptr;
+                }
+                delete oldEvent;
+                parabola->left->event = nullptr;
+            }
+            oldEvent = parabola->right->event;
+            if(oldEvent != nullptr) {
+                if (oldEvent->prev == nullptr && oldEvent->next != nullptr) { //first
+                    firstEvent = oldEvent->next;
+                    firstEvent->prev = nullptr;
+                    oldEvent->next = nullptr;
+                    oldEvent->parabola = nullptr;
+                } else if (oldEvent->next == nullptr && oldEvent->prev != nullptr) { //last
+                    oldEvent->prev->next = nullptr;
+                    oldEvent->prev = nullptr;
+                    oldEvent->parabola = nullptr;
+                } else if (oldEvent->next == nullptr && oldEvent->prev == nullptr) { //lone
+                    firstEvent = nullptr;
+                    oldEvent->parabola = nullptr;
+                } else { //in the middle
+                    oldEvent->next->prev = oldEvent->prev;
+                    oldEvent->prev->next = oldEvent->next;
+                    oldEvent->next = nullptr;
+                    oldEvent->prev = nullptr;
+                    oldEvent->parabola = nullptr;
+                }
+                delete oldEvent;
+                parabola->right->event = nullptr;
+            }*/
+
+
             parabola->left->right = parabola->right;
             parabola->right->left = parabola->left;
             parabola->left = nullptr;
@@ -420,6 +461,7 @@ int main() {
             parabola->event = nullptr;
             double radius = firstEvent->radius;
             cout << "Event: (" << firstEvent->p.x << ", " << firstEvent->p.y+radius << "), radius: " << radius << endl;
+
 
             if (radius > maxRadius)
                 if (firstEvent->p.x - radius >= rectangleMinX && firstEvent->p.x + radius <= rectangleMaxX
