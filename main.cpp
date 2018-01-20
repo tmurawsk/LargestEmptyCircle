@@ -19,54 +19,77 @@ double distance(Point p1, Point p2) {
     return sqrt(a * a + b * b);
 }
 
-void insertEvent(Event *beg, Event *act) {
-//    if (beg == nullptr) {
-//        cout << "USTAWIAM FIRSTEVENT" << endl;
-//        beg = act;
-//        return;
-//    }
+void insertEvent(Event **beg, Event **act) {
+    if (*beg == nullptr) {
+        *beg = *act;
+        return;
+    }
 
-    Event *first = beg;
+    Event *first = *beg;
     while (1) {
-        if (first->p.y < act->p.y) {
+        if (first->p.y < (*act)->p.y) {
             if (first->prev == nullptr) {
-                first->prev = act;
-                act->next = first;
-                act->prev = nullptr;
-                beg = act;
+                first->prev = *act;
+                (*act)->next = first;
+                (*act)->prev = nullptr;
+                *beg = *act;
             } else {
-                act->prev = first->prev;
-                act->next = first;
-                first->prev->next = act;
-                first->prev = act;
+                (*act)->prev = first->prev;
+                (*act)->next = first;
+                first->prev->next = *act;
+                first->prev = *act;
             }
             break;
         }
 
         if (first->next == nullptr) {
-            first->next = act;
-            act->prev = first;
-            act->next = nullptr;
+            first->next = *act;
+            (*act)->prev = first;
+            (*act)->next = nullptr;
             break;
         }
         first = first->next;
     }
 }
 
+void generatePoints(int howMany, double minX, double maxX, double minY, double maxY){
+    srand(time(NULL));
+    fstream file;
+    file.open("../pointsRandom.txt", ios::out);
+
+    if(!file.good()){
+        cerr << "ERROR WRITING FILE pointsRandom.txt" << endl;
+        exit(-1);
+    }
+
+    double d;
+    file << howMany << endl;
+    for(int i = 0; i < howMany; i++){
+        d = (double)rand() / RAND_MAX;
+        file << minX + d * (maxX - minX) << " ";
+        d = (double)rand() / RAND_MAX;
+        file << minY + d * (maxY - minY) << endl;
+    }
+
+    file.close();
+}
+
 
 int main() {
     cout << "Hello, World!" << endl;
-    fstream file;
-    file.open("../points2.txt", ios::in);
-
-    if (!file.good()) {
-        cerr << "ERROR READING FILE points.txt !" << endl;
-        return -1;
-    }
-
     int size;
     double rectangleMaxY = 50, rectangleMinY = -50, rectangleMaxX = 50, rectangleMinX = -50;
     double maxRadius = 0, maxCircleX = 0, maxCircleY = 0;
+
+    //generatePoints(15, rectangleMinX, rectangleMaxX, rectangleMinY, rectangleMaxY);
+
+    fstream file;
+    file.open("../pointsRandom.txt", ios::in);
+
+    if (!file.good()) {
+        cerr << "ERROR READING FILE !" << endl;
+        return -1;
+    }
 
     file >> size;
     Point points[size];
@@ -173,6 +196,25 @@ int main() {
                         a3 = 1 / (4 * p);
                         b3 = -(temp3->p.x / (2 * p));
                         c3 = (temp3->p.x * temp3->p.x / (4 * p)) + k;
+
+                        //obliczenie przeciecia parabol temp1 i temp2
+                        if(temp1->p.y == sweepY)
+                            x1 = temp1->p.x;
+                        else if(temp2->p.y == sweepY)
+                            x1 = temp2->p.x;
+                        else {
+                            k = (b2 - b1) * (b2 - b1) - 4 * (a2 - a1) * (c2 - c1);
+                            x1 = (b1 - b2 - sqrt(k)) / (2 * (a2 - a1));
+                        }
+
+                        if(temp2->p.y == sweepY)
+                            x2 = temp2->p.x;
+                        else if(temp3->p.y == sweepY)
+                            x2 = temp3->p.x;
+                        else {
+                            k = (b3 - b2) * (b3 - b2) - 4 * (a3 - a2) * (c3 - c2);
+                            x2 = (b2 - b3 - sqrt(k)) / (2 * (a3 - a2));
+                        }
                     } else { //at least second iteration
                         a1 = a2;
                         b1 = b2;
@@ -180,20 +222,24 @@ int main() {
                         a2 = a3;
                         b2 = b3;
                         c2 = c3;
-                        k = (temp3->p.y + sweepY) / 2;
-                        p = (temp3->p.y - sweepY) / 2;
-                        a3 = 1 / (4 * p);
-                        b3 = -(temp3->p.x / (2 * p));
-                        c3 = (temp3->p.x * temp3->p.x / (4 * p)) + k;
+                        x1 = x2;
+
+                        if(temp3->p.y == sweepY)
+                            x2 = temp3->p.x;
+                        else {
+                            k = (temp3->p.y + sweepY) / 2;
+                            p = (temp3->p.y - sweepY) / 2;
+                            a3 = 1 / (4 * p);
+                            b3 = -(temp3->p.x / (2 * p));
+                            c3 = (temp3->p.x * temp3->p.x / (4 * p)) + k;
+
+                            //obliczenie przeciecia parabol temp2 i temp3
+                            k = (b3 - b2) * (b3 - b2) - 4 * (a3 - a2) * (c3 - c2);
+                            x2 = (b2 - b3 - sqrt(k)) / (2 * (a3 - a2));
+                        }
                     }
                     if(points[pointIter].x == 11 && temp1->p.x == -10)
                         cout << "";
-                    //obliczenie przeciecia parabol
-                    k = (b2 - b1) * (b2 - b1) - 4 * (a2 - a1) * (c2 - c1);
-                    x1 = (b1 - b2 - sqrt(k)) / (2 * (a2 - a1));
-
-                    k = (b3 - b2) * (b3 - b2) - 4 * (a3 - a2) * (c3 - c2);
-                    x2 = (b2 - b3 - sqrt(k)) / (2 * (a3 - a2));
 
 
                     if (points[pointIter].x >= x1 && points[pointIter].x <= x2) { //found the parabola
@@ -275,14 +321,8 @@ int main() {
 
                         if(temp1->p.x < temp2->p.x){
                             temp2->event = newEvent1;
-                            if(newEvent1->p.y <= sweepY) {
-                                if (firstEvent == nullptr) {
-                                    firstEvent = newEvent1;
-                                    firstEvent->next = nullptr;
-                                    firstEvent->prev = nullptr;
-                                } else
-                                    insertEvent(firstEvent, newEvent1);
-                            }
+                            if(newEvent1->p.y <= sweepY)
+                                insertEvent(&firstEvent, &newEvent1);
                             else
                                 delete newEvent1;
                         }
@@ -298,7 +338,7 @@ int main() {
                                     firstEvent->next = nullptr;
                                     firstEvent->prev = nullptr;
                                 } else
-                                    insertEvent(firstEvent, newEvent2);
+                                    insertEvent(&firstEvent, &newEvent2);
                             }
                             else
                                 delete newEvent2;
@@ -350,7 +390,7 @@ int main() {
                                 firstEvent->next = nullptr;
                                 firstEvent->prev = nullptr;
                             } else
-                                insertEvent(firstEvent, newEvent);
+                                insertEvent(&firstEvent, &newEvent);
                         }
                         else
                             delete newEvent;
@@ -392,7 +432,7 @@ int main() {
                                 firstEvent->next = nullptr;
                                 firstEvent->prev = nullptr;
                             } else
-                                insertEvent(firstEvent, newEvent);
+                                insertEvent(&firstEvent, &newEvent);
                         }
                         else
                             delete newEvent;
@@ -421,7 +461,7 @@ int main() {
             Parabola *parabola = firstEvent->parabola;
 
             //usuwamy obecny circle event
-            /*Event *oldEvent = parabola->left->event;
+            Event *oldEvent = parabola->left->event;
             if(oldEvent != nullptr) {
                 if (oldEvent->prev == nullptr && oldEvent->next != nullptr) { //first
                     firstEvent = oldEvent->next;
@@ -468,7 +508,7 @@ int main() {
                 }
                 delete oldEvent;
                 parabola->right->event = nullptr;
-            }*/
+            }
 
 
             parabola->left->right = parabola->right;
