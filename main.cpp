@@ -7,6 +7,9 @@
 using namespace std;
 
 bool isGreaterThan(Point p1, Point p2) {
+    if(p1.y == p2.y)
+        return p1.x < p2.x;
+
     return p1.y > p2.y;
 }
 
@@ -54,7 +57,7 @@ void insertEvent(Event *beg, Event *act) {
 int main() {
     cout << "Hello, World!" << endl;
     fstream file;
-    file.open("../points.txt", ios::in);
+    file.open("../points2.txt", ios::in);
 
     if (!file.good()) {
         cerr << "ERROR READING FILE points.txt !" << endl;
@@ -111,25 +114,38 @@ int main() {
             }
             cout << endl;
 
-            if(points[pointIter].x == 11)
+            if(points[pointIter].x == -8)
                 cout << "";
 
             if (firstParabola->right == nullptr) {  //there is only one parabola in the list
-                Parabola *parabolaCopy = new Parabola();
-                Parabola *newParabola = new Parabola();
+                if(firstParabola->p.y == points[pointIter].y){ //parabola o tym samym y
+                    Parabola *newParabola = new Parabola();
 
-                cout << "jedna parabola" << endl;
-                parabolaCopy->p = firstParabola->p;
-                parabolaCopy->event = nullptr;
-                parabolaCopy->left = newParabola;
-                parabolaCopy->right = nullptr;
+                    cout << "jedna parabola, rownolegle" << endl;
+                    newParabola->p = points[pointIter];
+                    newParabola->event = nullptr;
+                    newParabola->left = firstParabola;
+                    newParabola->right = nullptr;
 
-                newParabola->p = points[pointIter];
-                newParabola->event = nullptr;
-                newParabola->left = firstParabola;
-                newParabola->right = parabolaCopy;
+                    firstParabola->right = newParabola;
+                }
+                else {
+                    Parabola *parabolaCopy = new Parabola();
+                    Parabola *newParabola = new Parabola();
 
-                firstParabola->right = newParabola;
+                    cout << "jedna parabola" << endl;
+                    parabolaCopy->p = firstParabola->p;
+                    parabolaCopy->event = nullptr;
+                    parabolaCopy->left = newParabola;
+                    parabolaCopy->right = nullptr;
+
+                    newParabola->p = points[pointIter];
+                    newParabola->event = nullptr;
+                    newParabola->left = firstParabola;
+                    newParabola->right = parabolaCopy;
+
+                    firstParabola->right = newParabola;
+                }
             } else {   //wstawiamy w srodek - szukamy przecietej paraboli; obliczamy circle event i usuwamy aktualny
                 Parabola *temp1 = firstParabola;
                 Parabola *temp2 = temp1->right;
@@ -174,16 +190,11 @@ int main() {
                         cout << "";
                     //obliczenie przeciecia parabol
                     k = (b2 - b1) * (b2 - b1) - 4 * (a2 - a1) * (c2 - c1);
-                    //if(temp1->p.y > temp2->p.y)
-                        x1 = (b1 - b2 - sqrt(k)) / (2 * (a2 - a1));
-                    //else
-                        //x1 = (b1 - b2 + sqrt(k)) / (2 * (a2 - a1));
+                    x1 = (b1 - b2 - sqrt(k)) / (2 * (a2 - a1));
 
                     k = (b3 - b2) * (b3 - b2) - 4 * (a3 - a2) * (c3 - c2);
-                    //if(temp2->p.y > temp3->p.y)
-                        x2 = (b2 - b3 - sqrt(k)) / (2 * (a3 - a2));
-                    //else
-                        //x2 = (b2 - b3 + sqrt(k)) / (2 * (a3 - a2));
+                    x2 = (b2 - b3 - sqrt(k)) / (2 * (a3 - a2));
+
 
                     if (points[pointIter].x >= x1 && points[pointIter].x <= x2) { //found the parabola
                         //bierzemy points->parabola, wstawiamy do listy nowy punkt, usuwamy obecny circle event, obliczamy circle event
@@ -238,9 +249,16 @@ int main() {
                         a3 = (temp2->p.x - temp3->p.x) / (temp3->p.y - temp2->p.y);
                         b3 = (temp2->p.y + temp3->p.y) / 2 - a3 * (temp2->p.x + temp3->p.x) / 2;
 
-                        x1 = (b1 - b2) / (a2 - a1);
+                        if(temp1->p.y == temp2->p.y) //jesli symetralna jest pionowa
+                            x1 = (temp1->p.x + temp2->p.x) / 2;
+                        else
+                            x1 = (b1 - b2) / (a2 - a1);
                         y1 = a2 * x1 + b2; //crossing point on the left
-                        x2 = (b2 - b3) / (a3 - a2);
+
+                        if(temp2->p.y == temp3->p.y) //jesli symetralna jest pionowa
+                            x2 = (temp2->p.x + temp3->p.x) / 2;
+                        else
+                            x2 = (b2 - b3) / (a3 - a2);
                         y2 = a2 * x2 + b2; //crossing point on the right
 
                         Event *newEvent1 = new Event();
@@ -399,7 +417,6 @@ int main() {
             cout << endl;
         } else if(pointIter == size || firstEvent->p.y >= points[pointIter].y) { //circle event
             sweepY = firstEvent->p.y;
-            //TODO usun kazdy event zwiazany z krawedzia, ktora zostala uzyta do stworzenia aktualnego kola
 
             Parabola *parabola = firstEvent->parabola;
 
