@@ -325,7 +325,7 @@ int main() {
 
                         if(temp1->p.x < temp2->p.x){
                             //if(newEvent1->p.y <= sweepY)
-                            insertEvent(&firstEvent, &newEvent1);
+                            //insertEvent(&firstEvent, &newEvent1);
                             //else
                             //delete newEvent1;
                             if(points[pointIter].x > temp2->p.x) {
@@ -342,32 +342,52 @@ int main() {
                                 temp2->event = newEvent1;
                                 newEvent1->parabola = temp2;
                             }
-                        }else
+                        }else{
                             delete newEvent1;
+                            newEvent1 = nullptr;
+                        }
 
 
                         if(temp2->p.x < temp3->p.x){
                             //if(newEvent2->p.y <= sweepY)
-                                insertEvent(&firstEvent, &newEvent2);
+                                //insertEvent(&firstEvent, &newEvent2);
                             //else
                                 //delete newEvent2;
 
                             if(points[pointIter].x < temp2->p.x) {
                                 if (temp3->p.y > (a1 * temp3->p.x + b1)){
-                                    temp2->event = newEvent2;
-                                    newEvent2->parabola = temp2;
+                                    if(newEvent1 == nullptr || newEvent1->parabola != temp2) {
+                                        temp2->event = newEvent2;
+                                        newEvent2->parabola = temp2;
+                                        insertEvent(&firstEvent, &newEvent2);
+                                    }
+                                    else
+                                        delete newEvent2;
                                 }
                                 else{
-                                    copy->event = newEvent2;
-                                    newEvent2->parabola = copy;
+                                    if(newEvent1 == nullptr || newEvent1->parabola != copy) {
+                                        copy->event = newEvent2;
+                                        newEvent2->parabola = copy;
+                                        insertEvent(&firstEvent, &newEvent2);
+                                    }
+                                    else
+                                        delete newEvent2;
                                 }
                             }
                             else{
+                                if(newEvent1 != nullptr && newEvent1->parabola == copy) {
+                                    delete newEvent1;
+                                    newEvent1 = nullptr;
+                                }
                                 copy->event = newEvent2;
                                 newEvent2->parabola = copy;
+                                insertEvent(&firstEvent, &newEvent2);
                             }
                         } else
                             delete newEvent2;
+
+                        if(newEvent1 != nullptr)
+                            insertEvent(&firstEvent, &newEvent1);
 
 //                        if(newEvent2->p.y <= sweepY)
 //                            insertEvent(firstEvent, newEvent2);
@@ -533,7 +553,7 @@ int main() {
 
             if (radius > maxRadius)
                 if (firstEvent->p.x - radius >= rectangleMinX && firstEvent->p.x + radius <= rectangleMaxX
-                    && firstEvent->p.y + radius <= rectangleMaxY && firstEvent->p.y - radius >= rectangleMinY) {
+                    && firstEvent->p.y + 2 * radius <= rectangleMaxY && firstEvent->p.y >= rectangleMinY) {
                     maxRadius = radius;
                     maxCircleX = firstEvent->p.x;
                     maxCircleY = firstEvent->p.y;
@@ -574,7 +594,7 @@ int main() {
 
     //brute-force
     Point p1, p2, p3;
-    double a1, a2, a3, b1, b2, b3, x1, y1, radius;
+    double a1, a2, b1, b2, x1, y1, radius;
     maxRadius = 0;
     for(int i = 0; i < size; i++){
         p1 = points[i];
