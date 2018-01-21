@@ -491,6 +491,122 @@ int main() {
 
             Parabola *parabola = firstEvent->parabola;
 
+            //dodajemy kolejny circle event
+            double a1, a2, a3, b1, b2, b3, x1, x2, y1, y2, radius;
+            Parabola *temp1, *temp2, *temp3, *temp4;
+            temp2 = parabola->left;
+            temp3 = parabola->right;
+            temp1 = temp2->left;
+            temp4 = temp3->right;
+
+            //TODO dodanie kolejnego eventa na miejsce poprzedniego, usunietego
+            a2 = (temp2->p.x - temp3->p.x) / (temp3->p.y - temp2->p.y);
+            b2 = (temp2->p.y + temp3->p.y) / 2 - a2 * (temp2->p.x + temp3->p.x) / 2;
+            if(temp1 != nullptr) {
+                a1 = (temp1->p.x - temp2->p.x) / (temp2->p.y - temp1->p.y);
+                b1 = (temp1->p.y + temp2->p.y) / 2 - a1 * (temp1->p.x + temp2->p.x) / 2;
+                if(temp1->p.y == temp2->p.y) //jesli symetralna jest pionowa
+                    x1 = (temp1->p.x + temp2->p.x) / 2;
+                else
+                    x1 = (b1 - b2) / (a2 - a1);
+            }
+            if(temp4 != nullptr) {
+                a3 = (temp3->p.x - temp4->p.x) / (temp4->p.y - temp3->p.y);
+                b3 = (temp3->p.y + temp4->p.y) / 2 - a3 * (temp3->p.x + temp4->p.x) / 2;
+                if(temp3->p.y == temp4->p.y) //jesli symetralna jest pionowa
+                    x2 = (temp3->p.x + temp4->p.x) / 2;
+                else
+                    x2 = (b2 - b3) / (a3 - a2);
+            }
+
+
+            if(temp2->p.y == temp3->p.y)
+                x1 = x2 = (temp2->p.x + temp3->p.x) / 2;
+
+            if(temp1 != nullptr)
+                y1 = a2 * x1 + b2; //crossing point on the left
+            if(temp4 != nullptr)
+                y2 = a2 * x2 + b2; //crossing point on the right
+
+            Event *newEvent1 = new Event();
+            Event *newEvent2 = new Event();
+
+            newEvent1->radius = distance(Point(x1, y1), temp2->p);
+            newEvent1->p.x = x1;
+            newEvent1->p.y = y1 - newEvent1->radius;
+            newEvent2->radius = distance(Point(x2, y2), temp2->p);
+            newEvent2->p.x = x2;
+            newEvent2->p.y = y2 - newEvent2->radius;
+
+            //TODO co jesli a1 == a2 (punkty sa wspoliniowe)
+
+            //prosta przechodzaca przez aktualny punkt oraz punkt paraboli, na ktora pada
+            /*a1 = (temp2->p.y - temp3->p.y) / (temp2->p.x - temp3->p.x);
+            b1 = temp2->p.y - a1 * temp2->p.x;
+
+
+            if(temp1->p.x < temp2->p.x && newEvent1->p.y <= sweepY){
+                if(temp3->p.x > temp2->p.x) {
+                    if (temp1->p.y < (a1 * temp1->p.x + b1)){
+                        temp2->event = newEvent1;
+                        newEvent1->parabola = temp2;
+                    }
+                    else{
+                        copy->event = newEvent1;
+                        newEvent1->parabola = copy;
+                    }
+                }
+                else{
+                    temp2->event = newEvent1;
+                    newEvent1->parabola = temp2;
+                }
+            }else{
+                delete newEvent1;
+                newEvent1 = nullptr;
+            }
+
+
+            if(temp2->p.x < temp3->p.x){
+                //if(newEvent2->p.y <= sweepY)
+                //insertEvent(&firstEvent, &newEvent2);
+                //else
+                //delete newEvent2;
+
+                if(points[pointIter].x < temp2->p.x) {
+                    if (temp3->p.y > (a1 * temp3->p.x + b1)){
+                        if(newEvent1 == nullptr || newEvent1->parabola != temp2) {
+                            temp2->event = newEvent2;
+                            newEvent2->parabola = temp2;
+                            insertEvent(&firstEvent, &newEvent2);
+                        }
+                        else
+                            delete newEvent2;
+                    }
+                    else{
+                        if(newEvent1 == nullptr || newEvent1->parabola != copy) {
+                            copy->event = newEvent2;
+                            newEvent2->parabola = copy;
+                            insertEvent(&firstEvent, &newEvent2);
+                        }
+                        else
+                            delete newEvent2;
+                    }
+                }
+                else{
+                    if(newEvent1 != nullptr && newEvent1->parabola == copy) {
+                        delete newEvent1;
+                        newEvent1 = nullptr;
+                    }
+                    copy->event = newEvent2;
+                    newEvent2->parabola = copy;
+                    insertEvent(&firstEvent, &newEvent2);
+                }
+            } else
+                delete newEvent2;
+
+            if(newEvent1 != nullptr)
+                insertEvent(&firstEvent, &newEvent1);*/
+
             //usuwamy obecny circle event
             Event *oldEvent = parabola->left->event;
             if(oldEvent != nullptr) {
@@ -547,7 +663,8 @@ int main() {
             parabola->left = nullptr;
             parabola->right = nullptr;
             parabola->event = nullptr;
-            double radius = firstEvent->radius;
+
+            radius = firstEvent->radius;
             cout << "Event: (" << firstEvent->p.x << ", " << firstEvent->p.y+radius << "), radius: " << radius << endl;
 
 
@@ -568,6 +685,39 @@ int main() {
                 temp->parabola = nullptr;
             } else
                 firstEvent = nullptr;
+
+//            delete temp;
+//            delete parabola;
+
+            //wstawiamy nowy event
+            if(temp1 == nullptr){
+                delete newEvent1;
+                newEvent1 = nullptr;
+            }
+            else if(temp2->p.x > temp1->p.x && temp2->p.x < temp3->p.x && newEvent1->p.y + 0.0000001 < sweepY){
+                temp2->event = newEvent1;
+                newEvent1->parabola = temp2;
+                insertEvent(&firstEvent, &newEvent1);
+            }
+            else{
+                delete newEvent1;
+                newEvent1 = nullptr;
+            }
+
+            if(temp4 == nullptr){
+                delete newEvent2;
+                newEvent2 = nullptr;
+            }
+            else if(temp3->p.x > temp2->p.x && temp3->p.x < temp4->p.x && newEvent2->p.y + 0.0000001 < sweepY){
+                temp3->event = newEvent2;
+                newEvent2->parabola = temp3;
+                insertEvent(&firstEvent, &newEvent2);
+            }
+            else{
+                delete newEvent2;
+                newEvent2 = nullptr;
+            }
+
 
             delete temp;
             delete parabola;
