@@ -499,6 +499,13 @@ int main() {
             temp1 = temp2->left;
             temp4 = temp3->right;
 
+
+//            if(temp1 != nullptr && temp1->left != nullptr && temp1->left->p.x == temp3->p.x && temp1->left->p.y == temp3->p.y)
+//                temp1 = temp1->left;
+//
+//            if(temp4 != nullptr && temp4->right != nullptr && temp4->right->p.x == temp2->p.x && temp4->right->p.y == temp2->p.y)
+//                temp4 = temp4->right;
+
             //TODO dodanie kolejnego eventa na miejsce poprzedniego, usunietego
             a2 = (temp2->p.x - temp3->p.x) / (temp3->p.y - temp2->p.y);
             b2 = (temp2->p.y + temp3->p.y) / 2 - a2 * (temp2->p.x + temp3->p.x) / 2;
@@ -694,9 +701,16 @@ int main() {
                 delete newEvent1;
                 newEvent1 = nullptr;
             }
-            else if(temp2->p.x > temp1->p.x && temp2->p.x < temp3->p.x && newEvent1->p.y + 0.0000001 < sweepY){
-                temp2->event = newEvent1;
-                newEvent1->parabola = temp2;
+//            else if(temp2->p.x > temp1->p.x && temp2->p.x < temp3->p.x && newEvent1->p.y + 0.0000001 < sweepY){
+            else if(((parabola->p.x - newEvent1->p.x) * (parabola->p.x - newEvent1->p.x) + (parabola->p.y - newEvent1->p.y - newEvent1->radius) * (parabola->p.y - newEvent1->p.y - newEvent1->radius) >= newEvent1->radius * newEvent1->radius) && newEvent1->p.y + 0.0000001 < sweepY){
+//                if(temp1 != temp2->left){
+//                    temp3->event = newEvent1;
+//                    newEvent1->parabola = temp3;
+//                }
+//                else {
+                    temp2->event = newEvent1;
+                    newEvent1->parabola = temp2;
+//                }
                 insertEvent(&firstEvent, &newEvent1);
             }
             else{
@@ -708,9 +722,16 @@ int main() {
                 delete newEvent2;
                 newEvent2 = nullptr;
             }
-            else if(temp3->p.x > temp2->p.x && temp3->p.x < temp4->p.x && newEvent2->p.y + 0.0000001 < sweepY){
-                temp3->event = newEvent2;
-                newEvent2->parabola = temp3;
+//            else if(/*temp3->p.x > temp2->p.x && */temp3->p.x < temp4->p.x){// && newEvent2->p.y + 0.0000001 < sweepY){
+            else if(((parabola->p.x - newEvent2->p.x) * (parabola->p.x - newEvent2->p.x) + (parabola->p.y - newEvent2->p.y - newEvent2->radius) * (parabola->p.y - newEvent2->p.y - newEvent2->radius) >= newEvent2->radius * newEvent2->radius) && newEvent2->p.y + 0.0000001 < sweepY){
+//                if(temp4 != temp3->right){
+//                    temp2->event = newEvent2;
+//                    newEvent2->parabola = temp2;
+//                }
+//                else {
+                    temp3->event = newEvent2;
+                    newEvent2->parabola = temp3;
+//                }
                 insertEvent(&firstEvent, &newEvent2);
             }
             else{
