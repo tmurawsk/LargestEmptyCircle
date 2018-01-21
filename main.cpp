@@ -323,7 +323,7 @@ int main() {
                         a1 = (temp2->p.y - points[pointIter].y) / (temp2->p.x - points[pointIter].x);
                         b1 = temp2->p.y - a1 * temp2->p.x;
 
-                        if(temp1->p.x < temp2->p.x){
+                        if(temp1->p.x < temp2->p.x || (temp1->left != nullptr && temp1->left->p.x == temp2->p.x && temp1->left->p.y == temp2->p.y)){
                             //if(newEvent1->p.y <= sweepY)
                             //insertEvent(&firstEvent, &newEvent1);
                             //else
