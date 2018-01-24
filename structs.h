@@ -32,7 +32,7 @@ typedef struct Edge{
     double a;       //a parameter of the ray (or x if ray is vertical)
     double b;       //b parameter of the ray
     Point p;        //starting point of the ray
-    short xDirection;//-1 -> x- ; 0 -> | ; 1 -> x+
+    int xDirection;//-1 -> x- ; 0 -> | ; 1 -> x+
     Event *event;
     Parabola *left;
     Parabola *right;

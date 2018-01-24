@@ -115,10 +115,10 @@ int main() {
     double rectangleMaxY = 50, rectangleMinY = -50, rectangleMaxX = 50, rectangleMinX = -50;
     double maxRadius = 0, maxCircleX = 0, maxCircleY = 0;
 
-    //generatePoints(6, rectangleMinX, rectangleMaxX, rectangleMinY, rectangleMaxY);
+    generatePoints(6, rectangleMinX, rectangleMaxX, rectangleMinY, rectangleMaxY);
 
     fstream file;
-    file.open("../points.txt", ios::in);
+    file.open("../pointsRandom.txt", ios::in);
 
     if (!file.good()) {
         cerr << "ERROR READING FILE !" << endl;
@@ -167,7 +167,7 @@ int main() {
                 cout << par->p.x << " | ";
                 par = par->right->right;
             }
-            cout << endl;
+            cout << par->p.x << endl;
 
             if (firstParabola->right == nullptr) {  //mamy tylko jedna parabole
                 if (firstParabola->p.y == points[pointIter].y) { //parabola o tym samym y
@@ -243,7 +243,7 @@ int main() {
                 cout << "wincyj paraboli" << endl;
 
                 while (1) { //szukamy paraboli
-                    if (temp1 == firstParabola) { //pierwsze przejscie petli
+                    /*if (temp1 == firstParabola) { //pierwsze przejscie petli
                         k = (temp2->p.y + sweepY) / 2;
                         p = (temp2->p.y - sweepY) / 2;
                         a2 = 1 / (4 * p);
@@ -265,7 +265,7 @@ int main() {
                             x2 = (rightEdge->a - b2 + sqrt(delta)) / (2 * a2); //punkt przeciecia na prawo
                         else
                             x2 = rightEdge->a; //jest pionowy
-                    } else { //przynajmniej druga iteracja
+                    } else {*/ //przynajmniej druga iteracja
                         //jesli istnieja dwa dalej to lecimy co druga parabole
                         //jesli nie istnieje to znaczy ze koniec, czyli lecimy o jedna i sprawdzamy
                         //czy lezy w srodkowej czy na koncowej
@@ -315,7 +315,6 @@ int main() {
                             temp2->right->left = copyParabola;
                             temp2->right = newLeftEdge;
 
-                            //TODO tu jeszcze dorobic usuwanie circle event i robienie swojego
 
                             a0 = (temp2->p.x - points[pointIter].x) / (points[pointIter].y - temp2->p.y);
                             b0 = (temp2->p.y + points[pointIter].y) / 2 - a0 * (temp2->p.x + points[pointIter].x) / 2;
@@ -342,60 +341,76 @@ int main() {
 
                             Event *event = rightEdge->event;
 
-                            if (event == nullptr) { //przypisujemy swoj event
-                                event = new Event();
-                                event->radius = distance(Point(x1, y1), points[pointIter]);
-                                event->p = Point(x1, y1 - event->radius);
-                                event->edge1 = newRightEdge;
-                                event->edge2 = rightEdge;
-                                newRightEdge->event = event;
-                                rightEdge->event = event;
-                                insertEvent(&firstEvent, &event);
-                            }
-                                //najpierw usuwamy event (jesli mozemy), potem przypisujemy swoj
-                            else if (y1 > (event->p.y + event->radius)) {
-                                removeEvent(&firstEvent, &event);
+                            double radius = distance(Point(x1, y1), points[pointIter]);
 
-                                Event *newEvent = new Event();
-                                newEvent->radius = distance(Point(x1, y1), points[pointIter]);
-                                newEvent->p = Point(x1, y1 - newEvent->radius);
-                                newEvent->edge1 = newRightEdge;
-                                newEvent->edge2 = rightEdge;
-                                newRightEdge->event = newEvent;
-                                rightEdge->event = newEvent;
-                                insertEvent(&firstEvent, &newEvent);
+//                            if((rightEdge->xDirection > 0 && rightEdge->a < 0 && y1 < rightEdge->p.y) ||
+//                                    (rightEdge->xDirection < 0 && rightEdge->a > 0 && y1 < rightEdge->p.y) ||
+//                                    (rightEdge->xDirection < 0 && rightEdge->a < 0 && y1 < rightEdge->p.y)) {
+                            if((rightEdge->xDirection > 0 && x1 > rightEdge->p.x) ||
+                               (rightEdge->xDirection < 0 && x1 < rightEdge->p.x)){
+                                if (event == nullptr && (y1 - radius + 0.00001) < sweepY) { //przypisujemy swoj event
+                                    event = new Event();
+                                    event->radius = radius;
+                                    event->p = Point(x1, y1 - radius);
+                                    event->edge1 = newRightEdge;
+                                    event->edge2 = rightEdge;
+                                    newRightEdge->event = event;
+                                    rightEdge->event = event;
+                                    insertEvent(&firstEvent, &event);
+                                }
+                                    //najpierw usuwamy event (jesli mozemy), potem przypisujemy swoj
+                                else if (event != nullptr && (y1 - radius + 0.00001) < sweepY && y1 > (event->p.y + event->radius)) {
+                                    removeEvent(&firstEvent, &event);
+
+                                    Event *newEvent = new Event();
+                                    newEvent->radius = radius;
+                                    newEvent->p = Point(x1, y1 - radius);
+                                    newEvent->edge1 = newRightEdge;
+                                    newEvent->edge2 = rightEdge;
+                                    newRightEdge->event = newEvent;
+                                    rightEdge->event = newEvent;
+                                    insertEvent(&firstEvent, &newEvent);
+                                }
                             }
 
 
                             //sprawdzenie eventu po lewej stronie:
                             //przeciecie sasiednich promieni:
-                            x1 = (rightEdge->b - newLeftEdge->b) / (newLeftEdge->a - rightEdge->a);
-                            y1 = rightEdge->a * x1 + rightEdge->b;
+                            x1 = (leftEdge->b - newLeftEdge->b) / (newLeftEdge->a - leftEdge->a);
+                            y1 = leftEdge->a * x1 + leftEdge->b;
 
                             event = leftEdge->event;
 
-                            if (event == nullptr) { //przypisujemy swoj event
-                                event = new Event();
-                                event->radius = distance(Point(x1, y1), points[pointIter]);
-                                event->p = Point(x1, y1 - event->radius);
-                                event->edge1 = leftEdge;
-                                event->edge2 = newLeftEdge;
-                                newLeftEdge->event = event;
-                                leftEdge->event = event;
-                                insertEvent(&firstEvent, &event);
-                            }
-                                //najpierw usuwamy event (jesli mozemy), potem przypisujemy swoj
-                            else if (y1 > (event->p.y + event->radius)) {
-                                removeEvent(&firstEvent, &event);
+                            radius = distance(Point(x1, y1), points[pointIter]);
 
-                                Event *newEvent = new Event();
-                                newEvent->radius = distance(Point(x1, y1), points[pointIter]);
-                                newEvent->p = Point(x1, y1 - newEvent->radius);
-                                newEvent->edge1 = leftEdge;
-                                newEvent->edge2 = newLeftEdge;
-                                newLeftEdge->event = newEvent;
-                                leftEdge->event = newEvent;
-                                insertEvent(&firstEvent, &newEvent);
+//                            if((leftEdge->xDirection > 0 && leftEdge->a > 0 && y1 > leftEdge->p.y) ||
+//                               (leftEdge->xDirection > 0 && leftEdge->a < 0 && y1 < leftEdge->p.y) ||
+//                               (leftEdge->xDirection < 0 && leftEdge->a < 0 && y1 < leftEdge->p.y)) {
+                            if((leftEdge->xDirection > 0 && x1 > leftEdge->p.x) ||
+                                    (leftEdge->xDirection < 0 && x1 < leftEdge->p.x)){
+                                if (event == nullptr && (y1 - radius + 0.00001) < sweepY) { //przypisujemy swoj event
+                                    event = new Event();
+                                    event->radius = radius;
+                                    event->p = Point(x1, y1 - radius);
+                                    event->edge1 = leftEdge;
+                                    event->edge2 = newLeftEdge;
+                                    newLeftEdge->event = event;
+                                    leftEdge->event = event;
+                                    insertEvent(&firstEvent, &event);
+                                }
+                                    //najpierw usuwamy event (jesli mozemy), potem przypisujemy swoj
+                                else if (event != nullptr && (y1 - radius + 0.00001) < sweepY && y1 > (event->p.y + event->radius)) {
+                                    removeEvent(&firstEvent, &event);
+
+                                    Event *newEvent = new Event();
+                                    newEvent->radius = radius;
+                                    newEvent->p = Point(x1, y1 - radius);
+                                    newEvent->edge1 = leftEdge;
+                                    newEvent->edge2 = newLeftEdge;
+                                    newLeftEdge->event = newEvent;
+                                    leftEdge->event = newEvent;
+                                    insertEvent(&firstEvent, &newEvent);
+                                }
                             }
 
                             break;
@@ -409,14 +424,14 @@ int main() {
 
                             copyParabola->p = temp1->p;
                             copyParabola->right = temp1->right;
-                            copyParabola->left = rightEdge;
+                            copyParabola->left = newRightEdge;
 
                             newParabola->p = points[pointIter];
                             newParabola->left = newLeftEdge;
                             newParabola->right = newRightEdge;
 
-                            temp2->right->left = copyParabola;
-                            temp2->right = newLeftEdge;
+                            temp1->right->left = copyParabola;
+                            temp1->right = newLeftEdge;
 
                             k = (temp1->p.y + sweepY) / 2;
                             p = (temp1->p.y - sweepY) / 2;
@@ -448,28 +463,36 @@ int main() {
 
                             Event *event = leftEdge->event;
 
-                            if (event == nullptr) { //przypisujemy swoj event
-                                event = new Event();
-                                event->radius = distance(Point(x1, y1), points[pointIter]);
-                                event->p = Point(x1, y1 - event->radius);
-                                event->edge1 = newRightEdge;
-                                event->edge2 = leftEdge;
-                                newRightEdge->event = event;
-                                leftEdge->event = event;
-                                insertEvent(&firstEvent, &event);
-                            }
-                                //najpierw usuwamy event (jesli mozemy), potem przypisujemy swoj
-                            else if (y1 > (event->p.y + event->radius)) {
-                                removeEvent(&firstEvent, &event);
+                            double radius = distance(Point(x1, y1), points[pointIter]);
 
-                                Event *newEvent = new Event();
-                                newEvent->radius = distance(Point(x1, y1), points[pointIter]);
-                                newEvent->p = Point(x1, y1 - newEvent->radius);
-                                newEvent->edge1 = newRightEdge;
-                                newEvent->edge2 = leftEdge;
-                                newRightEdge->event = newEvent;
-                                leftEdge->event = event;
-                                insertEvent(&firstEvent, &newEvent);
+//                            if((leftEdge->xDirection > 0 && leftEdge->a < 0 && y1 < leftEdge->p.y) ||
+//                               (leftEdge->xDirection < 0 && leftEdge->a > 0 && y1 < leftEdge->p.y) ||
+//                               (leftEdge->xDirection < 0 && leftEdge->a < 0 && y1 < leftEdge->p.y)) {
+                            if((leftEdge->xDirection > 0 && x1 > leftEdge->p.x) ||
+                                   (leftEdge->xDirection < 0 && x1 < leftEdge->p.x)){
+                                if (event == nullptr && (y1 - radius + 0.00001) < sweepY) { //przypisujemy swoj event
+                                    event = new Event();
+                                    event->radius = radius;
+                                    event->p = Point(x1, y1 - radius);
+                                    event->edge1 = newRightEdge;
+                                    event->edge2 = leftEdge;
+                                    newRightEdge->event = event;
+                                    leftEdge->event = event;
+                                    insertEvent(&firstEvent, &event);
+                                }
+                                    //najpierw usuwamy event (jesli mozemy), potem przypisujemy swoj
+                                else if (event != nullptr && (y1 - radius + 0.00001) < sweepY && y1 > (event->p.y + event->radius)) {
+                                    removeEvent(&firstEvent, &event);
+
+                                    Event *newEvent = new Event();
+                                    newEvent->radius = radius;
+                                    newEvent->p = Point(x1, y1 - radius);
+                                    newEvent->edge1 = newRightEdge;
+                                    newEvent->edge2 = leftEdge;
+                                    newRightEdge->event = newEvent;
+                                    leftEdge->event = event;
+                                    insertEvent(&firstEvent, &newEvent);
+                                }
                             }
 
                             //sprawdzenie eventu po lewej stronie, o ile istnieje (nie firstParabola)
@@ -481,28 +504,36 @@ int main() {
 
                                 event = edge->event;
 
-                                if (event == nullptr) { //przypisujemy swoj event
-                                    event = new Event();
-                                    event->radius = distance(Point(x1, y1), points[pointIter]);
-                                    event->p = Point(x1, y1 - event->radius);
-                                    event->edge1 = edge;
-                                    event->edge2 = newLeftEdge;
-                                    newLeftEdge->event = event;
-                                    edge->event = event;
-                                    insertEvent(&firstEvent, &event);
-                                }
-                                    //najpierw usuwamy event (jesli mozemy), potem przypisujemy swoj
-                                else if (y1 > (event->p.y + event->radius)) {
-                                    removeEvent(&firstEvent, &event);
+                                radius = distance(Point(x1, y1), points[pointIter]);
 
-                                    Event *newEvent = new Event();
-                                    newEvent->radius = distance(Point(x1, y1), points[pointIter]);
-                                    newEvent->p = Point(x1, y1 - newEvent->radius);
-                                    newEvent->edge1 = edge;
-                                    newEvent->edge2 = newLeftEdge;
-                                    newLeftEdge->event = newEvent;
-                                    edge->event = newEvent;
-                                    insertEvent(&firstEvent, &newEvent);
+//                                if((edge->xDirection > 0 && edge->a > 0 && y1 > edge->p.y) ||
+//                                   (edge->xDirection > 0 && edge->a < 0 && y1 < edge->p.y) ||
+//                                   (edge->xDirection < 0 && edge->a < 0 && y1 < edge->p.y)) {
+                                if((edge->xDirection > 0 && x1 > edge->p.x) ||
+                                   (edge->xDirection < 0 && x1 < edge->p.x)){
+                                    if (event == nullptr && (y1 - radius + 0.00001) < sweepY) { //przypisujemy swoj event
+                                        event = new Event();
+                                        event->radius = radius;
+                                        event->p = Point(x1, y1 - radius);
+                                        event->edge1 = edge;
+                                        event->edge2 = newLeftEdge;
+                                        newLeftEdge->event = event;
+                                        edge->event = event;
+                                        insertEvent(&firstEvent, &event);
+                                    }
+                                        //najpierw usuwamy event (jesli mozemy), potem przypisujemy swoj
+                                    else if (event != nullptr && (y1 - radius + 0.00001) < sweepY && y1 > (event->p.y + event->radius)) {
+                                        removeEvent(&firstEvent, &event);
+
+                                        Event *newEvent = new Event();
+                                        newEvent->radius = radius;
+                                        newEvent->p = Point(x1, y1 - radius);
+                                        newEvent->edge1 = edge;
+                                        newEvent->edge2 = newLeftEdge;
+                                        newLeftEdge->event = newEvent;
+                                        edge->event = newEvent;
+                                        insertEvent(&firstEvent, &newEvent);
+                                    }
                                 }
                             }
 
@@ -554,37 +585,45 @@ int main() {
 
                             Event *event = rightEdge->event;
 
-                            if (event == nullptr) { //przypisujemy swoj event
-                                event = new Event();
-                                event->radius = distance(Point(x1, y1), points[pointIter]);
-                                event->p = Point(x1, y1 - event->radius);
-                                event->edge1 = rightEdge;
-                                event->edge2 = newLeftEdge;
-                                newLeftEdge->event = event;
-                                rightEdge->event = event;
-                                insertEvent(&firstEvent, &event);
-                            }
-                                //najpierw usuwamy event (jesli mozemy), potem przypisujemy swoj
-                            else if (y1 > (event->p.y + event->radius)) {
-                                removeEvent(&firstEvent, &event);
+                            double radius = distance(Point(x1, y1), points[pointIter]);
 
-                                Event *newEvent = new Event();
-                                newEvent->radius = distance(Point(x1, y1), points[pointIter]);
-                                newEvent->p = Point(x1, y1 - newEvent->radius);
-                                newEvent->edge1 = rightEdge;
-                                newEvent->edge2 = newLeftEdge;
-                                newLeftEdge->event = newEvent;
-                                rightEdge->event = newEvent;
-                                insertEvent(&firstEvent, &newEvent);
+//                            if((rightEdge->xDirection > 0 && rightEdge->a > 0 && y1 > rightEdge->p.y) ||
+//                                    (rightEdge->xDirection > 0 && rightEdge->a < 0 && y1 < rightEdge->p.y) ||
+//                                    (rightEdge->xDirection < 0 && rightEdge->a < 0 && y1 < rightEdge->p.y)) {
+                            if((rightEdge->xDirection > 0 && x1 > rightEdge->p.x) ||
+                               (rightEdge->xDirection < 0 && x1 < rightEdge->p.x)){
+                                if (event == nullptr && (y1 - radius + 0.00001) < sweepY) { //przypisujemy swoj event
+                                    event = new Event();
+                                    event->radius = radius;
+                                    event->p = Point(x1, y1 - radius);
+                                    event->edge1 = rightEdge;
+                                    event->edge2 = newLeftEdge;
+                                    newLeftEdge->event = event;
+                                    rightEdge->event = event;
+                                    insertEvent(&firstEvent, &event);
+                                }
+                                    //najpierw usuwamy event (jesli mozemy), potem przypisujemy swoj
+                                else if (event != nullptr && (y1 - radius + 0.00001) < sweepY && y1 > (event->p.y + event->radius)) {
+                                    removeEvent(&firstEvent, &event);
+
+                                    Event *newEvent = new Event();
+                                    newEvent->radius = radius;
+                                    newEvent->p = Point(x1, y1 - radius);
+                                    newEvent->edge1 = rightEdge;
+                                    newEvent->edge2 = newLeftEdge;
+                                    newLeftEdge->event = newEvent;
+                                    rightEdge->event = newEvent;
+                                    insertEvent(&firstEvent, &newEvent);
+                                }
                             }
 
                             break;
                         }
-                    }
+                    //}
 
                     if(temp3->right == nullptr) //jesli koniec
                         break;
-                    else if(temp3->right->right != nullptr){
+                    else if(temp3->right != nullptr){
                         if(temp3->right->right->right != nullptr) //sa dwa wolne
                             temp1 = temp3;
                         else //jest tylko jedno wolne
@@ -597,9 +636,151 @@ int main() {
                 }
             }
             pointIter++;
+
+            cout << "beachline2: ";
+            par = firstParabola;
+            while (par->right != nullptr) {
+                cout << par->p.x << " | ";
+                par = par->right->right;
+            }
+            cout << par->p.x << endl;
+
+        }
+        else if(pointIter >= size || firstEvent->p.y >= points[pointIter].y){ //circle event
+            sweepY = firstEvent->p.y;
+
+            Edge *leftEdge = firstEvent->edge1;
+            Edge *rightEdge = firstEvent->edge2;
+            Parabola *temp1 = leftEdge->left;
+            Parabola *temp2 = rightEdge->left;
+            Parabola *temp3 = rightEdge->right;
+
+            //usuwamy temp2 i rightEdge, zmieniamy parametry leftEdge
+            //ostatecznie: temp1 - leftEdge - temp3
+
+            temp3->left = leftEdge;
+            leftEdge->right = temp3;
+
+            rightEdge->left = nullptr;
+            rightEdge->right = nullptr;
+            temp2->left = nullptr;
+            temp2->right = nullptr;
+            delete rightEdge;
+            delete temp2;
+            rightEdge = nullptr;
+            temp2 = nullptr;
+
+            double radius = firstEvent->radius;
+            cout << "CIRCLE event: (" << firstEvent->p.x << ", " << firstEvent->p.y+radius << "), radius: " << radius << endl;
+
+            if (radius > maxRadius)
+                if (firstEvent->p.x - radius >= rectangleMinX && firstEvent->p.x + radius <= rectangleMaxX
+                    && firstEvent->p.y + 2 * radius <= rectangleMaxY && firstEvent->p.y >= rectangleMinY) {
+                    maxRadius = radius;
+                    maxCircleX = firstEvent->p.x;
+                    maxCircleY = firstEvent->p.y + radius;
+                }
+
+            //obliczenie nowych parametrow edge
+            double a0 = (temp1->p.x - temp3->p.x) / (temp3->p.y - temp1->p.y);
+            double b0 = (temp1->p.y + temp3->p.y) / 2 - a0 * (temp1->p.x + temp3->p.x) / 2;
+
+            leftEdge->a = a0;
+            leftEdge->b = b0;
+            leftEdge->p = Point(firstEvent->p.x, firstEvent->p.y + radius);
+            leftEdge->xDirection = (a0 > 0 ? -1 : 1);
+            leftEdge->event = nullptr;
+
+            //usuniecie wykorzystanego circle event
+            removeEvent(&firstEvent, &firstEvent);
+
+            //obliczanie nowych circle event:
+            Edge *middleEdge = leftEdge;
+            rightEdge = temp3->right;
+            leftEdge = temp1->left;
+
+            //sprawdzenie eventu po lewej stronie:
+            //przeciecie sasiednich promieni:
+            if(leftEdge != nullptr) {
+                double x1 = (leftEdge->b - middleEdge->b) / (middleEdge->a - leftEdge->a);
+                double y1 = middleEdge->a * x1 + middleEdge->b;
+
+                Event *event = leftEdge->event;
+                radius = distance(Point(x1, y1), temp1->p);
+
+//                if ((leftEdge->xDirection > 0 && leftEdge->a > 0 && y1 > leftEdge->p.y) ||
+//                    (leftEdge->xDirection > 0 && leftEdge->a < 0 && y1 < leftEdge->p.y) ||
+//                    (leftEdge->xDirection < 0 && leftEdge->a < 0 && y1 < leftEdge->p.y)) {
+                if((leftEdge->xDirection > 0 && x1 > leftEdge->p.x) ||
+                   (leftEdge->xDirection < 0 && x1 < leftEdge->p.x)){
+                    if (event == nullptr && (y1 - radius + 0.00001) < sweepY) { //przypisujemy swoj event
+                        event = new Event();
+                        event->radius = radius;
+                        event->p = Point(x1, y1 - radius);
+                        event->edge1 = leftEdge;
+                        event->edge2 = middleEdge;
+                        middleEdge->event = event;
+                        leftEdge->event = event;
+                        insertEvent(&firstEvent, &event);
+                    }
+                        //najpierw usuwamy event (jesli mozemy), potem przypisujemy swoj
+                    else if (event != nullptr && y1 > (event->p.y + event->radius) && (y1 - radius + 0.00001) < sweepY) {
+                        removeEvent(&firstEvent, &event);
+
+                        Event *newEvent = new Event();
+                        newEvent->radius = radius;
+                        newEvent->p = Point(x1, y1 - radius);
+                        newEvent->edge1 = leftEdge;
+                        newEvent->edge2 = middleEdge;
+                        middleEdge->event = newEvent;
+                        leftEdge->event = newEvent;
+                        insertEvent(&firstEvent, &newEvent);
+                    }
+                }
+            }
+            //sprawdzenie eventu po prawej stronie:
+            if(rightEdge != nullptr) {
+                double x1 = (rightEdge->b - middleEdge->b) / (middleEdge->a - rightEdge->a);
+                double y1 = middleEdge->a * x1 + middleEdge->b;
+
+                Event *event = rightEdge->event;
+
+                radius = distance(Point(x1, y1), temp3->p);
+
+//                if ((leftEdge->xDirection > 0 && leftEdge->a < 0 && y1 < leftEdge->p.y) ||
+//                    (leftEdge->xDirection < 0 && leftEdge->a > 0 && y1 < leftEdge->p.y) ||
+//                    (leftEdge->xDirection < 0 && leftEdge->a < 0 && y1 < leftEdge->p.y)) {
+                if((rightEdge->xDirection > 0 && x1 > rightEdge->p.x) ||
+                   (rightEdge->xDirection < 0 && x1 < rightEdge->p.x)){
+                    if (event == nullptr && (y1 - radius + 0.00001) < sweepY) { //przypisujemy swoj event
+                        event = new Event();
+                        event->radius = radius;
+                        event->p = Point(x1, y1 - radius);
+                        event->edge1 = middleEdge;
+                        event->edge2 = rightEdge;
+                        middleEdge->event = event;
+                        rightEdge->event = event;
+                        insertEvent(&firstEvent, &event);
+                    }
+                        //najpierw usuwamy event (jesli mozemy), potem przypisujemy swoj
+                    else if (event != nullptr && y1 > (event->p.y + event->radius) && (y1 - radius + 0.00001) < sweepY) {
+                        removeEvent(&firstEvent, &event);
+
+                        Event *newEvent = new Event();
+                        newEvent->radius = radius;
+                        newEvent->p = Point(x1, y1 - radius);
+                        newEvent->edge1 = middleEdge;
+                        newEvent->edge2 = rightEdge;
+                        middleEdge->event = newEvent;
+                        rightEdge->event = newEvent;
+                        insertEvent(&firstEvent, &newEvent);
+                    }
+                }
+            }
         }
     }
 
+    cout << "\nCircle: (" << maxCircleX << ", " << maxCircleY << "), R = " << maxRadius << endl;
 
     while (firstParabola->right != nullptr) {
         Parabola *tempP = firstParabola;
