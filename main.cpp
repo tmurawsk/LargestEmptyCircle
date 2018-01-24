@@ -230,12 +230,14 @@ int main() {
 
                     firstParabola->right = newEdgeLeft;
                 }
-            } else { //szukamy paraboli
+            } else { //mamy wiecej niz jedna parabole
                 Parabola *temp1 = firstParabola;
                 Edge *leftEdge = temp1->right;
                 Parabola *temp2 = leftEdge->right;
                 Edge *rightEdge = temp2->right;
                 Parabola *temp3 = rightEdge->right;
+
+                //TODO przypadek gdy pierwsze dwa punkty maja takie same y
 
                 double a0, b0, a1, b1, c1, a2, b2, c2, a3, b3, c3, k, p, delta, x1, y1, x2, y2, x2prev;
                 cout << "wincyj paraboli" << endl;
@@ -314,12 +316,96 @@ int main() {
                             temp2->right = newLeftEdge;
 
                             //TODO tu jeszcze dorobic usuwanie circle event i robienie swojego
+
+                            a0 = (temp2->p.x - points[pointIter].x) / (points[pointIter].y - temp2->p.y);
+                            b0 = (temp2->p.y + points[pointIter].y) / 2 - a0 * (temp2->p.x + points[pointIter].x) / 2;
+
+                            y1 = a0 * points[pointIter].x + b0;
+
+                            newLeftEdge->p = newRightEdge->p = Point(points[pointIter].x, y1);
+                            newLeftEdge->a = newRightEdge->a = a0;
+                            newLeftEdge->b = newRightEdge->b = b0;
+                            newLeftEdge->xDirection = -1;
+                            newLeftEdge->event = nullptr;
+                            newLeftEdge->left = temp2;
+                            newLeftEdge->right = newParabola;
+                            newRightEdge->xDirection = 1;
+                            newRightEdge->event = nullptr;
+                            newRightEdge->left = newParabola;
+                            newRightEdge->right = copyParabola;
+
+                            //sprawdzenie eventu po prawej stronie:
+                            //przeciecie sasiednich promieni:
+                            x1 = (newRightEdge->b - rightEdge->b) / (rightEdge->a - newRightEdge->a);
+                            y1 = newRightEdge->a * x1 + newRightEdge->b;
+
+
+                            Event *event = rightEdge->event;
+
+                            if (event == nullptr) { //przypisujemy swoj event
+                                event = new Event();
+                                event->radius = distance(Point(x1, y1), points[pointIter]);
+                                event->p = Point(x1, y1 - event->radius);
+                                event->edge1 = newRightEdge;
+                                event->edge2 = rightEdge;
+                                newRightEdge->event = event;
+                                rightEdge->event = event;
+                                insertEvent(&firstEvent, &event);
+                            }
+                                //najpierw usuwamy event (jesli mozemy), potem przypisujemy swoj
+                            else if (y1 > (event->p.y + event->radius)) {
+                                removeEvent(&firstEvent, &event);
+
+                                Event *newEvent = new Event();
+                                newEvent->radius = distance(Point(x1, y1), points[pointIter]);
+                                newEvent->p = Point(x1, y1 - newEvent->radius);
+                                newEvent->edge1 = newRightEdge;
+                                newEvent->edge2 = rightEdge;
+                                newRightEdge->event = newEvent;
+                                rightEdge->event = newEvent;
+                                insertEvent(&firstEvent, &newEvent);
+                            }
+
+
+                            //sprawdzenie eventu po lewej stronie:
+                            //przeciecie sasiednich promieni:
+                            x1 = (rightEdge->b - newLeftEdge->b) / (newLeftEdge->a - rightEdge->a);
+                            y1 = rightEdge->a * x1 + rightEdge->b;
+
+                            event = leftEdge->event;
+
+                            if (event == nullptr) { //przypisujemy swoj event
+                                event = new Event();
+                                event->radius = distance(Point(x1, y1), points[pointIter]);
+                                event->p = Point(x1, y1 - event->radius);
+                                event->edge1 = leftEdge;
+                                event->edge2 = newLeftEdge;
+                                newLeftEdge->event = event;
+                                leftEdge->event = event;
+                                insertEvent(&firstEvent, &event);
+                            }
+                                //najpierw usuwamy event (jesli mozemy), potem przypisujemy swoj
+                            else if (y1 > (event->p.y + event->radius)) {
+                                removeEvent(&firstEvent, &event);
+
+                                Event *newEvent = new Event();
+                                newEvent->radius = distance(Point(x1, y1), points[pointIter]);
+                                newEvent->p = Point(x1, y1 - newEvent->radius);
+                                newEvent->edge1 = leftEdge;
+                                newEvent->edge2 = newLeftEdge;
+                                newLeftEdge->event = newEvent;
+                                leftEdge->event = newEvent;
+                                insertEvent(&firstEvent, &newEvent);
+                            }
+
                             break;
                         } else if (points[pointIter].x < x1) { //znalazlem parabole (temp1)
                             Parabola *newParabola = new Parabola();
                             Parabola *copyParabola = new Parabola();
                             Edge *newLeftEdge = new Edge();
                             Edge *newRightEdge = new Edge();
+
+                            //TODO - PRZYPADKI GDY SYMETRALNA JEST PIONOWA
 
                             copyParabola->p = temp1->p;
                             copyParabola->right = temp1->right;
@@ -369,6 +455,7 @@ int main() {
                                 event->edge1 = newRightEdge;
                                 event->edge2 = leftEdge;
                                 newRightEdge->event = event;
+                                leftEdge->event = event;
                                 insertEvent(&firstEvent, &event);
                             }
                                 //najpierw usuwamy event (jesli mozemy), potem przypisujemy swoj
@@ -381,7 +468,42 @@ int main() {
                                 newEvent->edge1 = newRightEdge;
                                 newEvent->edge2 = leftEdge;
                                 newRightEdge->event = newEvent;
+                                leftEdge->event = event;
                                 insertEvent(&firstEvent, &newEvent);
+                            }
+
+                            //sprawdzenie eventu po lewej stronie, o ile istnieje (nie firstParabola)
+                            if(temp1->left != nullptr){
+                                Edge *edge = temp1->left;
+
+                                x1 = (edge->b - newLeftEdge->b) / (newLeftEdge->a - edge->a);
+                                y1 = newLeftEdge->a * x1 + newLeftEdge->b;
+
+                                event = edge->event;
+
+                                if (event == nullptr) { //przypisujemy swoj event
+                                    event = new Event();
+                                    event->radius = distance(Point(x1, y1), points[pointIter]);
+                                    event->p = Point(x1, y1 - event->radius);
+                                    event->edge1 = edge;
+                                    event->edge2 = newLeftEdge;
+                                    newLeftEdge->event = event;
+                                    edge->event = event;
+                                    insertEvent(&firstEvent, &event);
+                                }
+                                    //najpierw usuwamy event (jesli mozemy), potem przypisujemy swoj
+                                else if (y1 > (event->p.y + event->radius)) {
+                                    removeEvent(&firstEvent, &event);
+
+                                    Event *newEvent = new Event();
+                                    newEvent->radius = distance(Point(x1, y1), points[pointIter]);
+                                    newEvent->p = Point(x1, y1 - newEvent->radius);
+                                    newEvent->edge1 = edge;
+                                    newEvent->edge2 = newLeftEdge;
+                                    newLeftEdge->event = newEvent;
+                                    edge->event = newEvent;
+                                    insertEvent(&firstEvent, &newEvent);
+                                }
                             }
 
                             break;
@@ -425,7 +547,7 @@ int main() {
                             newRightEdge->left = newParabola;
                             newRightEdge->right = copyParabola;
 
-                            //sprawdzenie eventu po prawej stronie:
+                            //sprawdzenie eventu po lewej stronie:
                             //przeciecie sasiednich promieni:
                             x1 = (rightEdge->b - newLeftEdge->b) / (newLeftEdge->a - rightEdge->a);
                             y1 = rightEdge->a * x1 + rightEdge->b;
@@ -439,6 +561,7 @@ int main() {
                                 event->edge1 = rightEdge;
                                 event->edge2 = newLeftEdge;
                                 newLeftEdge->event = event;
+                                rightEdge->event = event;
                                 insertEvent(&firstEvent, &event);
                             }
                                 //najpierw usuwamy event (jesli mozemy), potem przypisujemy swoj

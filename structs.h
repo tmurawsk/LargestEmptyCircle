@@ -9,7 +9,7 @@ typedef struct Point{
     double x;
     double y;
 
-    Point() = default {};
+    Point() {};
 
     Point(double a, double b){
         x = a;
