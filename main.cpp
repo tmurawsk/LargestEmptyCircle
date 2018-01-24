@@ -52,6 +52,40 @@ void insertEvent(Event **beg, Event **act) {
     }
 }
 
+void removeEvent(Event **beg, Event **act) {
+    if (*beg == nullptr || *act == nullptr)
+        return;
+
+    (*act)->edge1->event = nullptr;
+    (*act)->edge2->event = nullptr;
+    (*act)->edge1 = nullptr;
+    (*act)->edge2 = nullptr;
+
+    if ((*beg)->next == nullptr) { //jedyny element
+        delete (*beg);
+        (*beg) = nullptr;
+        return;
+    }
+
+    if ((*act) == (*beg)) { //pierwszy
+        (*beg) = (*beg)->next;
+        delete (*beg)->prev;
+        (*beg)->prev = nullptr;
+    } else if ((*act)->next == nullptr) { //ostatni
+        (*act)->prev->next = nullptr;
+        (*act)->prev = nullptr;
+        delete (*act);
+        (*act) = nullptr;
+    } else { //w srodku
+        (*act)->prev->next = (*act)->next;
+        (*act)->next->prev = (*act)->prev;
+        (*act)->prev = nullptr;
+        (*act)->next = nullptr;
+        delete (*act);
+        (*act) = nullptr;
+    }
+}
+
 void generatePoints(int howMany, double minX, double maxX, double minY, double maxY) {
     srand(time(NULL));
     fstream file;
@@ -116,7 +150,6 @@ int main() {
     sweepY = points[pointIter].x;
     firstParabola = new Parabola();
     firstParabola->p = points[pointIter++];
-    firstParabola->event = nullptr;
     firstParabola->left = nullptr;
     firstParabola->right = nullptr;
 
@@ -136,7 +169,7 @@ int main() {
             }
             cout << endl;
 
-            if (firstParabola->right == nullptr) {  //there is only one parabola in the list
+            if (firstParabola->right == nullptr) {  //mamy tylko jedna parabole
                 if (firstParabola->p.y == points[pointIter].y) { //parabola o tym samym y
                     Parabola *newParabola = new Parabola();
                     Edge *newEdge = new Edge();
@@ -145,11 +178,11 @@ int main() {
 
                     newEdge->p = Point((points[pointIter].x + firstParabola->p.x) / 2, rectangleMaxY);
                     newEdge->xDirection = 0;
+                    newEdge->event = nullptr;
                     newEdge->left = firstParabola;
                     newEdge->right = newParabola;
 
                     newParabola->p = points[pointIter];
-                    newParabola->event = nullptr;
                     newParabola->left = newEdge;
                     newParabola->right = nullptr;
 
@@ -179,26 +212,266 @@ int main() {
                     newEdgeLeft->a = newEdgeRight->a = a0;
                     newEdgeLeft->b = newEdgeRight->b = b0;
                     newEdgeLeft->xDirection = -1;
-                    newEdgeRight->xDirection = 1;
+                    newEdgeLeft->event = nullptr;
                     newEdgeLeft->left = firstParabola;
                     newEdgeLeft->right = newParabola;
+                    newEdgeRight->xDirection = 1;
+                    newEdgeRight->event = nullptr;
                     newEdgeRight->left = newParabola;
                     newEdgeRight->right = parabolaCopy;
 
                     parabolaCopy->p = firstParabola->p;
-                    parabolaCopy->event = nullptr;
                     parabolaCopy->left = newEdgeRight;
                     parabolaCopy->right = nullptr;
 
                     newParabola->p = points[pointIter];
-                    newParabola->event = nullptr;
                     newParabola->left = newEdgeLeft;
                     newParabola->right = newEdgeRight;
 
                     firstParabola->right = newEdgeLeft;
                 }
             } else { //szukamy paraboli
+                Parabola *temp1 = firstParabola;
+                Edge *leftEdge = temp1->right;
+                Parabola *temp2 = leftEdge->right;
+                Edge *rightEdge = temp2->right;
+                Parabola *temp3 = rightEdge->right;
 
+                double a0, b0, a1, b1, c1, a2, b2, c2, a3, b3, c3, k, p, delta, x1, y1, x2, y2, x2prev;
+                cout << "wincyj paraboli" << endl;
+
+                while (1) { //szukamy paraboli
+                    if (temp1 == firstParabola) { //pierwsze przejscie petli
+                        k = (temp2->p.y + sweepY) / 2;
+                        p = (temp2->p.y - sweepY) / 2;
+                        a2 = 1 / (4 * p);
+                        b2 = -(temp2->p.x / (2 * p));
+                        c2 = (temp2->p.x * temp2->p.x / (4 * p)) + k;
+
+                        delta = (b2 - leftEdge->a) * (b2 - leftEdge->a) - 4 * a2 * (c2 - leftEdge->b);
+                        if (leftEdge->xDirection < 0) //promien leci w lewo
+                            x1 = (leftEdge->a - b2 - sqrt(delta)) / (2 * a2); //punkt przeciecia na lewo
+                        else if (leftEdge->xDirection > 0)
+                            x1 = (leftEdge->a - b2 + sqrt(delta)) / (2 * a2); //punkt przeciecia na prawo
+                        else
+                            x1 = leftEdge->a; //jest pionowy
+
+                        delta = (b2 - rightEdge->a) * (b2 - rightEdge->a) - 4 * a2 * (c2 - rightEdge->b);
+                        if (rightEdge->xDirection < 0) //promien leci w lewo
+                            x2 = (rightEdge->a - b2 - sqrt(delta)) / (2 * a2); //punkt przeciecia na lewo
+                        else if (rightEdge->xDirection > 0)
+                            x2 = (rightEdge->a - b2 + sqrt(delta)) / (2 * a2); //punkt przeciecia na prawo
+                        else
+                            x2 = rightEdge->a; //jest pionowy
+                    } else { //przynajmniej druga iteracja
+                        //jesli istnieja dwa dalej to lecimy co druga parabole
+                        //jesli nie istnieje to znaczy ze koniec, czyli lecimy o jedna i sprawdzamy
+                        //czy lezy w srodkowej czy na koncowej
+                        //UWAGA - jest tez mozliwosc, ze nie istnieje juz nawet nastepny
+                        k = (temp2->p.y + sweepY) / 2;
+                        p = (temp2->p.y - sweepY) / 2;
+                        a2 = 1 / (4 * p);
+                        b2 = -(temp2->p.x / (2 * p));
+                        c2 = (temp2->p.x * temp2->p.x / (4 * p)) + k;
+
+                        x2prev = x2;
+
+                        delta = (b2 - leftEdge->a) * (b2 - leftEdge->a) - 4 * a2 * (c2 - leftEdge->b);
+                        if (leftEdge->xDirection < 0) //promien leci w lewo
+                            x1 = (leftEdge->a - b2 - sqrt(delta)) / (2 * a2); //punkt przeciecia na lewo
+                        else if (leftEdge->xDirection > 0)
+                            x1 = (leftEdge->a - b2 + sqrt(delta)) / (2 * a2); //punkt przeciecia na prawo
+                        else
+                            x1 = leftEdge->a; //jest pionowy
+
+                        delta = (b2 - rightEdge->a) * (b2 - rightEdge->a) - 4 * a2 * (c2 - rightEdge->b);
+                        if (rightEdge->xDirection < 0) //promien leci w lewo
+                            x2 = (rightEdge->a - b2 - sqrt(delta)) / (2 * a2); //punkt przeciecia na lewo
+                        else if (rightEdge->xDirection > 0)
+                            x2 = (rightEdge->a - b2 + sqrt(delta)) / (2 * a2); //punkt przeciecia na prawo
+                        else
+                            x2 = rightEdge->a; //jest pionowy
+
+                        //sprawdzamy czy trafilismy na odpowiednia parabole:
+                        if (points[pointIter].x > x1 && points[pointIter].x < x2) { //znalazlem parabole (temp2)
+                            //dodajemy nowa parabole i edge
+                            Parabola *newParabola = new Parabola();
+                            Parabola *copyParabola = new Parabola;
+                            Edge *newLeftEdge = new Edge();
+                            Edge *newRightEdge = new Edge();
+
+                            cout << "ZNALAZLEM PARABOLE" << endl;
+
+                            copyParabola->p = temp2->p;
+                            copyParabola->right = temp2->right;
+                            copyParabola->left = newRightEdge;
+
+                            newParabola->p = points[pointIter];
+                            newParabola->left = newLeftEdge;
+                            newParabola->right = newRightEdge;
+
+                            temp2->right->left = copyParabola;
+                            temp2->right = newLeftEdge;
+
+                            //TODO tu jeszcze dorobic usuwanie circle event i robienie swojego
+                            break;
+                        } else if (points[pointIter].x < x1) { //znalazlem parabole (temp1)
+                            Parabola *newParabola = new Parabola();
+                            Parabola *copyParabola = new Parabola();
+                            Edge *newLeftEdge = new Edge();
+                            Edge *newRightEdge = new Edge();
+
+                            copyParabola->p = temp1->p;
+                            copyParabola->right = temp1->right;
+                            copyParabola->left = rightEdge;
+
+                            newParabola->p = points[pointIter];
+                            newParabola->left = newLeftEdge;
+                            newParabola->right = newRightEdge;
+
+                            temp2->right->left = copyParabola;
+                            temp2->right = newLeftEdge;
+
+                            k = (temp1->p.y + sweepY) / 2;
+                            p = (temp1->p.y - sweepY) / 2;
+                            a2 = 1 / (4 * p);
+                            b2 = -(temp1->p.x / (2 * p));
+                            c2 = (temp1->p.x * temp1->p.x / (4 * p)) + k;
+
+                            a0 = (temp1->p.x - points[pointIter].x) / (points[pointIter].y - temp1->p.y);
+                            b0 = (temp1->p.y + points[pointIter].y) / 2 - a0 * (temp1->p.x + points[pointIter].x) / 2;
+
+                            y1 = a0 * points[pointIter].x + b0;
+
+                            newLeftEdge->p = newRightEdge->p = Point(points[pointIter].x, y1);
+                            newLeftEdge->a = newRightEdge->a = a0;
+                            newLeftEdge->b = newRightEdge->b = b0;
+                            newLeftEdge->xDirection = -1;
+                            newLeftEdge->event = nullptr;
+                            newLeftEdge->left = temp1;
+                            newLeftEdge->right = newParabola;
+                            newRightEdge->xDirection = 1;
+                            newRightEdge->event = nullptr;
+                            newRightEdge->left = newParabola;
+                            newRightEdge->right = copyParabola;
+
+                            //sprawdzenie eventu po prawej stronie:
+                            //przeciecie sasiednich promieni:
+                            x1 = (newRightEdge->b - leftEdge->b) / (leftEdge->a - newRightEdge->a);
+                            y1 = newRightEdge->a * x1 + newRightEdge->b;
+
+                            Event *event = leftEdge->event;
+
+                            if (event == nullptr) { //przypisujemy swoj event
+                                event = new Event();
+                                event->radius = distance(Point(x1, y1), points[pointIter]);
+                                event->p = Point(x1, y1 - event->radius);
+                                event->edge1 = newRightEdge;
+                                event->edge2 = leftEdge;
+                                newRightEdge->event = event;
+                                insertEvent(&firstEvent, &event);
+                            }
+                                //najpierw usuwamy event (jesli mozemy), potem przypisujemy swoj
+                            else if (y1 > (event->p.y + event->radius)) {
+                                removeEvent(&firstEvent, &event);
+
+                                Event *newEvent = new Event();
+                                newEvent->radius = distance(Point(x1, y1), points[pointIter]);
+                                newEvent->p = Point(x1, y1 - newEvent->radius);
+                                newEvent->edge1 = newRightEdge;
+                                newEvent->edge2 = leftEdge;
+                                newRightEdge->event = newEvent;
+                                insertEvent(&firstEvent, &newEvent);
+                            }
+
+                            break;
+
+                        } else if (temp3->right == nullptr && points[pointIter].x > x2) { //znalazlem parabole (temp3)
+                            Parabola *newParabola = new Parabola();
+                            Parabola *copyParabola = new Parabola();
+                            Edge *newLeftEdge = new Edge();
+                            Edge *newRightEdge = new Edge();
+
+                            copyParabola->p = temp3->p;
+                            copyParabola->right = temp3->right;
+                            copyParabola->left = newRightEdge;
+
+                            newParabola->p = points[pointIter];
+                            newParabola->left = newLeftEdge;
+                            newParabola->right = newRightEdge;
+
+                            temp3->right = newLeftEdge;
+
+                            k = (temp3->p.y + sweepY) / 2;
+                            p = (temp3->p.y - sweepY) / 2;
+                            a2 = 1 / (4 * p);
+                            b2 = -(temp3->p.x / (2 * p));
+                            c2 = (temp3->p.x * temp3->p.x / (4 * p)) + k;
+
+                            a0 = (temp3->p.x - points[pointIter].x) / (points[pointIter].y - temp3->p.y);
+                            b0 = (temp3->p.y + points[pointIter].y) / 2 - a0 * (temp3->p.x + points[pointIter].x) / 2;
+
+                            y1 = a0 * points[pointIter].x + b0;
+
+                            newLeftEdge->p = newRightEdge->p = Point(points[pointIter].x, y1);
+                            newLeftEdge->a = newRightEdge->a = a0;
+                            newLeftEdge->b = newRightEdge->b = b0;
+                            newLeftEdge->xDirection = -1;
+                            newLeftEdge->event = nullptr;
+                            newLeftEdge->left = temp3;
+                            newLeftEdge->right = newParabola;
+                            newRightEdge->xDirection = 1;
+                            newRightEdge->event = nullptr;
+                            newRightEdge->left = newParabola;
+                            newRightEdge->right = copyParabola;
+
+                            //sprawdzenie eventu po prawej stronie:
+                            //przeciecie sasiednich promieni:
+                            x1 = (rightEdge->b - newLeftEdge->b) / (newLeftEdge->a - rightEdge->a);
+                            y1 = rightEdge->a * x1 + rightEdge->b;
+
+                            Event *event = rightEdge->event;
+
+                            if (event == nullptr) { //przypisujemy swoj event
+                                event = new Event();
+                                event->radius = distance(Point(x1, y1), points[pointIter]);
+                                event->p = Point(x1, y1 - event->radius);
+                                event->edge1 = rightEdge;
+                                event->edge2 = newLeftEdge;
+                                newLeftEdge->event = event;
+                                insertEvent(&firstEvent, &event);
+                            }
+                                //najpierw usuwamy event (jesli mozemy), potem przypisujemy swoj
+                            else if (y1 > (event->p.y + event->radius)) {
+                                removeEvent(&firstEvent, &event);
+
+                                Event *newEvent = new Event();
+                                newEvent->radius = distance(Point(x1, y1), points[pointIter]);
+                                newEvent->p = Point(x1, y1 - newEvent->radius);
+                                newEvent->edge1 = rightEdge;
+                                newEvent->edge2 = newLeftEdge;
+                                newLeftEdge->event = newEvent;
+                                rightEdge->event = newEvent;
+                                insertEvent(&firstEvent, &newEvent);
+                            }
+
+                            break;
+                        }
+                    }
+
+                    if(temp3->right == nullptr) //jesli koniec
+                        break;
+                    else if(temp3->right->right != nullptr){
+                        if(temp3->right->right->right != nullptr) //sa dwa wolne
+                            temp1 = temp3;
+                        else //jest tylko jedno wolne
+                            temp1 = temp2;
+                        leftEdge = temp1->right;
+                        temp2 = leftEdge->right;
+                        rightEdge= temp2->right;
+                        temp3 = rightEdge->right;
+                    }
+                }
             }
             pointIter++;
         }
