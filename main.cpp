@@ -115,7 +115,7 @@ int main() {
     double rectangleMaxY = 100, rectangleMinY = -100, rectangleMaxX = 50, rectangleMinX = -50;
     double maxRadius = 0, maxCircleX = 0, maxCircleY = 0;
 
-    //generatePoints(6, rectangleMinX, rectangleMaxX, rectangleMinY, rectangleMaxY);
+    generatePoints(500, rectangleMinX, rectangleMaxX, rectangleMinY, rectangleMaxY);
 
     fstream file;
     file.open("../pointsRandom.txt", ios::in);
@@ -351,8 +351,9 @@ int main() {
 //                                    (rightEdge->xDirection < 0 && rightEdge->a < 0 && y1 < rightEdge->p.y)) {
                             if((rightEdge->xDirection > 0 && x1 > rightEdge->p.x) ||
                                (rightEdge->xDirection < 0 && x1 < rightEdge->p.x)){
-                                if (event == nullptr && (y1 - radius + 0.00001) < sweepY && (y1 - radius) >= rectangleMinY) { //przypisujemy swoj event
+                                if (event == nullptr && (y1 - radius) < sweepY && (y1 - radius) >= rectangleMinY) { //przypisujemy swoj event
                                     event = new Event();
+                                    //TODO usunalem epsilon
                                     event->radius = radius;
                                     event->p = Point(x1, y1 - radius);
                                     event->edge1 = newRightEdge;
@@ -362,9 +363,10 @@ int main() {
                                     insertEvent(&firstEvent, &event);
                                 }
                                     //najpierw usuwamy event (jesli mozemy), potem przypisujemy swoj
-                                else if (event != nullptr && (y1 - radius + 0.00001) < sweepY && (y1 - radius) >= rectangleMinY){ // && y1 > (event->p.y + event->radius)) {
+                                else if (event != nullptr && (y1 - radius) < sweepY && (y1 - radius) >= rectangleMinY){ // && y1 > (event->p.y + event->radius)) {
                                     if(distance(Point(event->p.x, event->p.y + event->radius), points[pointIter]) < event->radius) {
                                         removeEvent(&firstEvent, &event);
+                                        //TODO usunalem epsilon
 
                                         Event *newEvent = new Event();
                                         newEvent->radius = radius;
@@ -393,8 +395,9 @@ int main() {
 //                               (leftEdge->xDirection < 0 && leftEdge->a < 0 && y1 < leftEdge->p.y)) {
                             if((leftEdge->xDirection > 0 && x1 > leftEdge->p.x) ||
                                     (leftEdge->xDirection < 0 && x1 < leftEdge->p.x)){
-                                if (event == nullptr && (y1 - radius + 0.00001) < sweepY && (y1 - radius) >= rectangleMinY) { //przypisujemy swoj event
+                                if (event == nullptr && (y1 - radius) < sweepY && (y1 - radius) >= rectangleMinY) { //przypisujemy swoj event
                                     event = new Event();
+                                    //TODO usunalem epsilon
                                     event->radius = radius;
                                     event->p = Point(x1, y1 - radius);
                                     event->edge1 = leftEdge;
@@ -404,9 +407,11 @@ int main() {
                                     insertEvent(&firstEvent, &event);
                                 }
                                     //najpierw usuwamy event (jesli mozemy), potem przypisujemy swoj
-                                else if (event != nullptr && (y1 - radius + 0.00001) < sweepY && (y1 - radius) >= rectangleMinY){ //&& y1 > (event->p.y + event->radius)) {
+                                else if (event != nullptr && (y1 - radius) < sweepY && (y1 - radius) >= rectangleMinY){ //&& y1 > (event->p.y + event->radius)) {
                                     if(distance(Point(event->p.x, event->p.y + event->radius), points[pointIter]) < event->radius) {
                                         removeEvent(&firstEvent, &event);
+                                        //TODO usunalem epsilon
+
                                         //TODO ten distance powyzej moze byc zle
 
                                         Event *newEvent = new Event();
@@ -481,8 +486,9 @@ int main() {
 //                               (leftEdge->xDirection < 0 && leftEdge->a < 0 && y1 < leftEdge->p.y)) {
                             if((leftEdge->xDirection > 0 && x1 > leftEdge->p.x) ||
                                    (leftEdge->xDirection < 0 && x1 < leftEdge->p.x)){
-                                if (event == nullptr && (y1 - radius + 0.00001) < sweepY && (y1 - radius) >= rectangleMinY) { //przypisujemy swoj event
+                                if (event == nullptr && (y1 - radius) < sweepY && (y1 - radius) >= rectangleMinY) { //przypisujemy swoj event
                                     event = new Event();
+                                    //TODO usunalem epsilon
                                     event->radius = radius;
                                     event->p = Point(x1, y1 - radius);
                                     event->edge1 = newRightEdge;
@@ -492,9 +498,10 @@ int main() {
                                     insertEvent(&firstEvent, &event);
                                 }
                                     //najpierw usuwamy event (jesli mozemy), potem przypisujemy swoj
-                                else if (event != nullptr && (y1 - radius + 0.00001) < sweepY && (y1 - radius) >= rectangleMinY){ // && y1 > (event->p.y + event->radius)) {
+                                else if (event != nullptr && (y1 - radius) < sweepY && (y1 - radius) >= rectangleMinY){ // && y1 > (event->p.y + event->radius)) {
                                     if(distance(Point(event->p.x, event->p.y + event->radius), points[pointIter]) < event->radius) {
                                         removeEvent(&firstEvent, &event);
+                                        //TODO usunalem epsilon
 
                                         Event *newEvent = new Event();
                                         newEvent->radius = radius;
@@ -524,8 +531,9 @@ int main() {
 //                                   (edge->xDirection < 0 && edge->a < 0 && y1 < edge->p.y)) {
                                 if((edge->xDirection > 0 && x1 > edge->p.x) ||
                                    (edge->xDirection < 0 && x1 < edge->p.x)){
-                                    if (event == nullptr && (y1 - radius + 0.00001) < sweepY && (y1 - radius) >= rectangleMinY) { //przypisujemy swoj event
+                                    if (event == nullptr && (y1 - radius) < sweepY && (y1 - radius) >= rectangleMinY) { //przypisujemy swoj event
                                         event = new Event();
+                                        //TODO usunalem epsilon
                                         event->radius = radius;
                                         event->p = Point(x1, y1 - radius);
                                         event->edge1 = edge;
@@ -535,9 +543,10 @@ int main() {
                                         insertEvent(&firstEvent, &event);
                                     }
                                         //najpierw usuwamy event (jesli mozemy), potem przypisujemy swoj
-                                    else if (event != nullptr && (y1 - radius + 0.00001) < sweepY && (y1 - radius) >= rectangleMinY){ // && y1 > (event->p.y + event->radius)) {
+                                    else if (event != nullptr && (y1 - radius) < sweepY && (y1 - radius) >= rectangleMinY){ // && y1 > (event->p.y + event->radius)) {
                                         if(distance(Point(event->p.x, event->p.y + event->radius), points[pointIter]) < event->radius) {
                                             removeEvent(&firstEvent, &event);
+                                            //TODO usunalem epsilon
 
                                             Event *newEvent = new Event();
                                             newEvent->radius = radius;
@@ -610,8 +619,9 @@ int main() {
 //                                    (rightEdge->xDirection < 0 && rightEdge->a < 0 && y1 < rightEdge->p.y)) {
                             if((rightEdge->xDirection > 0 && x1 > rightEdge->p.x) ||
                                (rightEdge->xDirection < 0 && x1 < rightEdge->p.x)){
-                                if (event == nullptr && (y1 - radius + 0.00001) < sweepY && (y1 - radius) >= rectangleMinY) { //przypisujemy swoj event
+                                if (event == nullptr && (y1 - radius) < sweepY && (y1 - radius) >= rectangleMinY) { //przypisujemy swoj event
                                     event = new Event();
+                                    //TODO usunalem epsilon
                                     event->radius = radius;
                                     event->p = Point(x1, y1 - radius);
                                     event->edge1 = rightEdge;
@@ -621,9 +631,10 @@ int main() {
                                     insertEvent(&firstEvent, &event);
                                 }
                                     //najpierw usuwamy event (jesli mozemy), potem przypisujemy swoj
-                                else if (event != nullptr && (y1 - radius + 0.00001) < sweepY && (y1 - radius) >= rectangleMinY){ // && y1 > (event->p.y + event->radius)) {
+                                else if (event != nullptr && (y1 - radius) < sweepY && (y1 - radius) >= rectangleMinY){ // && y1 > (event->p.y + event->radius)) {
                                     if(distance(Point(event->p.x, event->p.y + event->radius), points[pointIter]) < event->radius) {
                                         removeEvent(&firstEvent, &event);
+                                        //TODO usunalem epsilon
 
                                         Event *newEvent = new Event();
                                         newEvent->radius = radius;
@@ -764,13 +775,14 @@ int main() {
                 //TODO sprawdzac jakos czy middleEdge zajete - jak dotad to sa sytuacje, ze bez sensu je nadpisuje
                 if((leftEdge->xDirection > 0 && x1 > leftEdge->p.x) ||
                    (leftEdge->xDirection < 0 && x1 < leftEdge->p.x)){
-                    if (event == nullptr && (y1 - radius + 0.00001) < sweepY && (y1 - radius) >= rectangleMinY) { //przypisujemy swoj event
+                    if (event == nullptr && (y1 - radius) < sweepY && (y1 - radius) >= rectangleMinY) { //przypisujemy swoj event
                         if(middleEdge->event == nullptr || (middleEdge->event != nullptr &&
                                 distance(Point(middleEdge->event->p.x, middleEdge->event->p.y + middleEdge->event->radius), middleEdge->p) > distance(Point(x1, y1), middleEdge->p))) {
 
                             Event *pom = middleEdge->event;
                             if(middleEdge->event != nullptr)
                                 removeEvent(&firstEvent, &pom);
+                            //TODO usunalem epsilon
 
                             event = new Event(); //TODO to sprawdzanie middleEdge jest dziwne
                             event->radius = radius;
@@ -783,7 +795,7 @@ int main() {
                         }
                     }
                         //najpierw usuwamy event (jesli mozemy), potem przypisujemy swoj
-                    else if (event != nullptr && (y1 - radius + 0.00001) < sweepY && (y1 - radius) >= rectangleMinY){ // && y1 > (event->p.y + event->radius)) {
+                    else if (event != nullptr && (y1 - radius) < sweepY && (y1 - radius) >= rectangleMinY){ // && y1 > (event->p.y + event->radius)) {
                         if(middleEdge->event == nullptr || (middleEdge->event != nullptr &&
                                 distance(Point(middleEdge->event->p.x, middleEdge->event->p.y + middleEdge->event->radius), middleEdge->p) > distance(Point(x1, y1), middleEdge->p))) {
                             if(distance(Point(event->p.x, event->p.y + event->radius), leftEdge->p) > distance(Point(x1,y1), leftEdge->p)) {
@@ -791,6 +803,7 @@ int main() {
                                 Event *pom = middleEdge->event;
                                 if(middleEdge->event != nullptr)
                                     removeEvent(&firstEvent, &pom);
+                                //TODO usunalem epsilon
 
                                 removeEvent(&firstEvent, &event);
 
@@ -824,13 +837,15 @@ int main() {
                     //TODO tu powinienem sprawdzac czy rightEdge i middleEdge sa wolne; jesli nie to
                     //TODO trzeba bedzie cos z tym zrobic - jakos sprawdzic ktory event ma pierwszenstwo
                     //TODO czy to bedzie ten o mniejszym y?
-                    if (event == nullptr && (y1 - radius + 0.00001) < sweepY && (y1 - radius) >= rectangleMinY) { //przypisujemy swoj event
+                    if (event == nullptr && (y1 - radius) < sweepY && (y1 - radius) >= rectangleMinY) { //przypisujemy swoj event
                         if(middleEdge->event == nullptr || (middleEdge->event != nullptr &&
                                                             distance(Point(middleEdge->event->p.x, middleEdge->event->p.y + middleEdge->event->radius), middleEdge->p) > distance(Point(x1, y1), middleEdge->p))) {
 
                             Event *pom = middleEdge->event;
                             if (middleEdge->event != nullptr)
                                 removeEvent(&firstEvent, &pom);
+                            //TODO usunalem epsilon
+
                             //TODO tutaj tez jest to dziwne sprawdzanie middleEdge
                             //TODO trzeba chyba to jednak pousuwac...
 
@@ -845,7 +860,7 @@ int main() {
                         }
                     }
                         //najpierw usuwamy event (jesli mozemy), potem przypisujemy swoj
-                    else if (event != nullptr && (y1 - radius + 0.00001) < sweepY && (y1 - radius) >= rectangleMinY){ // && y1 > (event->p.y + event->radius) ) {
+                    else if (event != nullptr && (y1 - radius) < sweepY && (y1 - radius) >= rectangleMinY){ // && y1 > (event->p.y + event->radius) ) {
                         if(middleEdge->event == nullptr || (middleEdge->event != nullptr &&
                                                             distance(Point(middleEdge->event->p.x, middleEdge->event->p.y + middleEdge->event->radius), middleEdge->p) > distance(Point(x1,y1), middleEdge->p))) {
                             if(distance(Point(event->p.x, event->p.y + event->radius), rightEdge->p) > distance(Point(x1,y1), rightEdge->p)) {
@@ -853,6 +868,7 @@ int main() {
                                 Event *pom = middleEdge->event;
                                 if(middleEdge->event != nullptr)
                                     removeEvent(&firstEvent, &pom);
+                                //TODO usunalem epsilon
 
                                 removeEvent(&firstEvent, &event);
 
