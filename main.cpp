@@ -72,7 +72,7 @@ void mode2(Voronoi *voronoi, char **argv){
     voronoi->generatePoints(atoi(argv[6]));
 
     for(int i = 0; i < voronoi->points.size(); i++)
-        cout << "( " << voronoi->points[i].x << ", " << voronoi->points[i].y << " ), R: " << voronoi->maxRadius << endl;
+        cout << "( " << voronoi->points[i].x << ", " << voronoi->points[i].y << " )" << endl;
 
     cout << "Wynik algorytmu Fortune'a:" << endl;
     voronoi->calculateFortune();
@@ -100,8 +100,15 @@ void mode3(Voronoi *voronoi, char **argv){
     auto start = std::chrono::system_clock::now();
     auto end = std::chrono::system_clock::now();
     std::chrono::duration<double> duration = end - start;
+    double durationAvgFortune;
+    double durationAvgBrute;
+    double radiusFortune;
+    double radiusBrute;
+
 
     for(int i = 0; i < howManyTimes; i++){
+        durationAvgFortune = 0;
+        durationAvgBrute = 0;
         for(int j = 0; j < generation; j++){
             voronoi->generatePoints(nStart);
 
@@ -109,15 +116,20 @@ void mode3(Voronoi *voronoi, char **argv){
             voronoi->calculateFortune();
             end = std::chrono::system_clock::now();
 
+	    radiusFortune = voronoi->maxRadius;
             duration = end - start;
-            file << nStart << "\t" << duration.count() << "\t";
+            durationAvgFortune += duration.count();
 
             start = std::chrono::system_clock::now();
             voronoi->calculateBrute();
             end = std::chrono::system_clock::now();
 
+	    radiusBrute = voronoi->maxRadius;
             duration = end - start;
-            file << duration.count() << endl;
+            durationAvgBrute += duration.count();
+
+	    cout << "Fortune's radius: " << radiusFortune << endl;
+	    cout << "Brute's radius: " << radiusBrute << endl;
 
             voronoi->points.clear();
             delete voronoi;
@@ -125,6 +137,7 @@ void mode3(Voronoi *voronoi, char **argv){
             voronoi->loadLimits(atof(argv[2]), atof(argv[3]), atof(argv[4]), atof(argv[5]));
 
         }
+        file << nStart << "\t" << durationAvgFortune/generation << "\t" << durationAvgBrute/generation << "\n";
         nStart += interval;
         file << endl;
     }
