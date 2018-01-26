@@ -122,14 +122,10 @@ void Voronoi::calculateBrute() {
             }
         }
     }
-    cout << "Brutal: (" << maxCircleX << ", " << maxCircleY << "), R = " << maxRadius << endl;
 }
 
 void Voronoi::calculateFortune() {
     sort(points.begin(), points.end(), Point::isGreaterThan);
-
-    for (int i = 0; i < points.size(); i++)
-        cout << "( " << points[i].x << ", " << points[i].y << " )" << endl;
 
     sweepY = points[pointIter].x;
     firstParabola = new Parabola();
@@ -148,8 +144,6 @@ void Voronoi::calculateFortune() {
             circleEvent();
         }
     }
-
-    cout << "\nCircle: (" << maxCircleX << ", " << maxCircleY << "), R = " << maxRadius << endl;
 }
 
 void Voronoi::circleEvent() {
@@ -185,8 +179,6 @@ void Voronoi::circleEvent() {
     temp2 = nullptr;
 
     double radius = firstEvent->radius;
-    cout << "CIRCLE event: (" << firstEvent->p.x << ", " << firstEvent->p.y + radius << "), radius: " << radius
-         << endl;
 
     if (radius > maxRadius)
         if (firstEvent->p.x - radius >= rectangleMinX && firstEvent->p.x + radius <= rectangleMaxX
@@ -232,7 +224,7 @@ void Voronoi::circleEvent() {
 
 void Voronoi::calculateEdgeCrossing(Edge *leftEdge, Edge *middleEdge, Edge *rightEdge) {
 
-    if (leftEdge != nullptr) {
+    if (leftEdge != nullptr && leftEdge->a != middleEdge->a) {
         double x1, y1;
         if(leftEdge->xDirection == 0){
             x1 = leftEdge->p.x;
@@ -285,7 +277,7 @@ void Voronoi::calculateEdgeCrossing(Edge *leftEdge, Edge *middleEdge, Edge *righ
             }
         }
     }
-    if (rightEdge != nullptr) {
+    if (rightEdge != nullptr && rightEdge->a != middleEdge->a) {
         double x1, y1;
         if(rightEdge->xDirection == 0){
             x1 = rightEdge->p.x;
@@ -342,22 +334,11 @@ void Voronoi::calculateEdgeCrossing(Edge *leftEdge, Edge *middleEdge, Edge *righ
 
 void Voronoi::siteEvent() {
     sweepY = points[pointIter].y;
-    cout << "SITE event : (" << points[pointIter].x << ", " << points[pointIter].y << ")" << endl;
-
-    cout << "beachline: ";
-    Parabola *par = firstParabola;
-    while (par->right != nullptr) {
-        cout << par->p.x << " | ";
-        par = par->right->right;
-    }
-    cout << par->p.x << endl;
 
     if (firstParabola->right == nullptr) {  //mamy tylko jedna parabole
         if (firstParabola->p.y == points[pointIter].y) { //parabola o tym samym y
             Parabola *newParabola = new Parabola();
             Edge *newEdge = new Edge();
-
-            cout << "jedna parabola, rownolegle" << endl;
 
             newEdge->p = Point((points[pointIter].x + firstParabola->p.x) / 2, rectangleMaxY);
             newEdge->xDirection = 0;
@@ -375,7 +356,6 @@ void Voronoi::siteEvent() {
             Parabola *newParabola = new Parabola();
             Edge *newEdgeLeft = new Edge();
             Edge *newEdgeRight = new Edge();
-            cout << "jedna parabola" << endl;
 
             double a0, b0, y0, a1, b1, c1, k, p;
 
@@ -508,14 +488,6 @@ void Voronoi::siteEvent() {
         searchForParabola();
     }
     pointIter++;
-
-    cout << "beachline2: ";
-    par = firstParabola;
-    while (par->right != nullptr) {
-        cout << par->p.x << " | ";
-        par = par->right->right;
-    }
-    cout << par->p.x << endl;
 
 }
 
@@ -660,8 +632,6 @@ void Voronoi::insertParabola(Parabola *parabola) {
     Edge *newLeftEdge = new Edge();
     Edge *newRightEdge = new Edge();
 
-    cout << "ZNALAZLEM PARABOLE" << endl;
-
     copyParabola->p = parabola->p;
     copyParabola->right = parabola->right;
     copyParabola->left = newRightEdge;
@@ -787,3 +757,23 @@ void Voronoi::checkLeftEvent(Edge *leftEdge, Edge *newLeftEdge) {
         }
     }
 }
+
+
+//void Voronoi::calculateCircle2Points() {
+//    Point p1, p2, p3;
+//    double a, b, xs, ys, radius;
+//    int size = points.size();
+//    maxCircleX = maxCircleY = maxRadius = 0;
+//
+//    for(int i = 0; i < size; i++){
+//        p1 = points[i];
+//        for(int j = i+1; j < size; j++){
+//            p2 = points[j];
+//
+//            a = (p1.x - p2.x) / (p2.y - p1.y);
+//            b = (p1.y + p2.y) / 2 - a * (p1.x+ p2.x) / 2;
+//
+//        }
+//    }
+//
+//}

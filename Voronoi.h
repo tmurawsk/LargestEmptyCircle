@@ -6,6 +6,7 @@
 #include "Event.h"
 
 class Voronoi {
+public:
     Parabola *firstParabola;
     Event *firstEvent;
     std::vector<Point> points;
@@ -19,7 +20,6 @@ class Voronoi {
     double maxCircleY;
     double sweepY;
 
-public:
     Voronoi();
     ~Voronoi();
 
@@ -36,6 +36,7 @@ private:
 public:
     void calculateBrute();
     void calculateFortune();
+    void calculateCircle2Points();
     void loadLimits(double minX, double maxX, double minY, double maxY);
     void loadPoints(std::vector<Point> points);
     void generatePoints(int howMany);
