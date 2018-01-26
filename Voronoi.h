@@ -10,10 +10,10 @@ class Voronoi {
     Event *firstEvent;
     std::vector<Point> points;
     int pointIter;
-    int rectangleMinX;
-    int rectangleMaxX;
-    int rectangleMinY;
-    int rectangleMaxY;
+    double rectangleMinX;
+    double rectangleMaxX;
+    double rectangleMinY;
+    double rectangleMaxY;
     double maxRadius;
     double maxCircleX;
     double maxCircleY;
@@ -27,15 +27,18 @@ private:
     void circleEvent();
     void siteEvent();
     void calculateEdgeCrossing(Edge *leftEdge, Edge *middleEdge, Edge *rightEdge);
-    void generatePoints(int howMany, double minX, double maxX, double minY, double maxY);
     void searchForParabola();
     void insertParabola(Parabola *parabola);
     void checkRightEvent(Edge *newRightEdge, Edge *rightEdge);
     void checkLeftEvent(Edge *leftEdge, Edge *newLeftEdge);
+    void insertCrossingParabola(Parabola *leftParabola, Parabola *rightParabola, double y0);
 
 public:
     void calculateBrute();
-    void calculateFortune(int howMany);
+    void calculateFortune();
+    void loadLimits(double minX, double maxX, double minY, double maxY);
+    void loadPoints(std::vector<Point> points);
+    void generatePoints(int howMany);
 };
 
 

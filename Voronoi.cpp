@@ -13,7 +13,7 @@ Voronoi::Voronoi() {
 }
 
 Voronoi::~Voronoi() {
-    while (firstParabola->right != nullptr) {
+    while (firstParabola != nullptr && firstParabola->right != nullptr) {
         Parabola *tempP = firstParabola;
         Edge *tempE = firstParabola->right;
         firstParabola = firstParabola->right->right;
@@ -32,20 +32,26 @@ Voronoi::~Voronoi() {
     }
 }
 
-void Voronoi::generatePoints(int howMany, double minX, double maxX, double minY, double maxY) {
-    srand(time(NULL));
+void Voronoi::loadPoints(std::vector<Point> points) {
+    this->points = points;
+}
 
+void Voronoi::loadLimits(double minX, double maxX, double minY, double maxY) {
     rectangleMinX = minX;
     rectangleMaxX = maxX;
     rectangleMinY = minY;
     rectangleMaxY = maxY;
+}
+
+void Voronoi::generatePoints(int howMany) {
+    srand(time(NULL));
 
     double x, y;
     for (int i = 0; i < howMany; i++) {
         x = (double) rand() / RAND_MAX;
-        x = minX + x * (maxX - minX);
+        x = rectangleMinX + x * (rectangleMaxX - rectangleMinX);
         y = (double) rand() / RAND_MAX;
-        y = minY + y * (maxY - minY);
+        y = rectangleMinY + y * (rectangleMaxY - rectangleMinY);
 
         points.push_back(Point(x, y));
     }
@@ -56,6 +62,7 @@ void Voronoi::calculateBrute() {
     Point p1, p2, p3;
     double a1, a2, b1, b2, x1, y1, radius;
     int size = points.size();
+    sort(points.begin(), points.end(), Point::isGreaterThan);
 
     maxRadius = maxCircleX = maxCircleY = 0;
 
@@ -66,16 +73,29 @@ void Voronoi::calculateBrute() {
             for (int k = j + 1; k < size; k++) {
                 p3 = points[k];
 
-                if ((p1.x == p2.x && p2.x == p3.x) || (p1.y == p2.y && p2.y == p3.y))
+                if ((p1.x == p2.x && p2.x == p3.x) || (p1.y == p2.y && p2.y == p3.y) ||
+                        (p1.y/p1.x == p2.y/p2.x && p2.y/p2.x == p3.y/p3.x))
                     continue;
 
-                a1 = (p1.x - p2.x) / (p2.y - p1.y);
-                b1 = (p1.y + p2.y) / 2 - a1 * (p1.x + p2.x) / 2;
-                a2 = (p2.x - p3.x) / (p3.y - p2.y);
-                b2 = (p2.y + p3.y) / 2 - a2 * (p2.x + p3.x) / 2;
+                if(p1.y == p2.y){
+                    x1 = (p1.x + p2.x) / 2;
+                    a2 = (p2.x - p3.x) / (p3.y - p2.y);
+                    b2 = (p2.y + p3.y) / 2 - a2 * (p2.x + p3.x) / 2;
+                    y1 = a2 * x1 + b2;
+                }else if(p2.y == p3.y){
+                    x1 = (p2.x + p3.x) / 2;
+                    a1 = (p1.x - p2.x) / (p2.y - p1.y);
+                    b1 = (p1.y + p2.y) / 2 - a1 * (p1.x + p2.x) / 2;
+                    y1 = a1 * x1 + b1;
+                }else {
+                    a1 = (p1.x - p2.x) / (p2.y - p1.y);
+                    b1 = (p1.y + p2.y) / 2 - a1 * (p1.x + p2.x) / 2;
+                    a2 = (p2.x - p3.x) / (p3.y - p2.y);
+                    b2 = (p2.y + p3.y) / 2 - a2 * (p2.x + p3.x) / 2;
 
-                x1 = (b1 - b2) / (a2 - a1);
-                y1 = a1 * x1 + b1;
+                    x1 = (b1 - b2) / (a2 - a1);
+                    y1 = a1 * x1 + b1;
+                }
 
                 radius = Point::distance(Point(x1, y1), p1);
 
@@ -105,8 +125,7 @@ void Voronoi::calculateBrute() {
     cout << "Brutal: (" << maxCircleX << ", " << maxCircleY << "), R = " << maxRadius << endl;
 }
 
-void Voronoi::calculateFortune(int howMany) {
-    generatePoints(howMany, -50, 50, -50, 50);
+void Voronoi::calculateFortune() {
     sort(points.begin(), points.end(), Point::isGreaterThan);
 
     for (int i = 0; i < points.size(); i++)
@@ -214,14 +233,26 @@ void Voronoi::circleEvent() {
 void Voronoi::calculateEdgeCrossing(Edge *leftEdge, Edge *middleEdge, Edge *rightEdge) {
 
     if (leftEdge != nullptr) {
-        double x1 = (leftEdge->b - middleEdge->b) / (middleEdge->a - leftEdge->a);
-        double y1 = middleEdge->a * x1 + middleEdge->b;
+        double x1, y1;
+        if(leftEdge->xDirection == 0){
+            x1 = leftEdge->p.x;
+            y1 = middleEdge->a * x1 + middleEdge->b;
+        }
+        else if(middleEdge->xDirection == 0){
+            x1 = middleEdge->p.x;
+            y1 = leftEdge->a * x1 + leftEdge->b;
+        }else{
+            x1 = (leftEdge->b - middleEdge->b) / (middleEdge->a - leftEdge->a);
+            y1 = middleEdge->a * x1 + middleEdge->b;
+        }
+
 
         Event *event = leftEdge->event;
         double radius = Point::distance(Point(x1, y1), leftEdge->right->p);
 
         if ((leftEdge->xDirection > 0 && x1 > leftEdge->p.x) ||
-            (leftEdge->xDirection < 0 && x1 < leftEdge->p.x)) {
+            (leftEdge->xDirection < 0 && x1 < leftEdge->p.x) ||
+                leftEdge->xDirection == 0) {
             if ((y1 - radius) < sweepY && (y1 - radius) >= rectangleMinY) {
                 if (middleEdge->event == nullptr || (middleEdge->event != nullptr &&
                                                      Point::distance(Point(middleEdge->event->p.x,
@@ -255,15 +286,26 @@ void Voronoi::calculateEdgeCrossing(Edge *leftEdge, Edge *middleEdge, Edge *righ
         }
     }
     if (rightEdge != nullptr) {
-        double x1 = (rightEdge->b - middleEdge->b) / (middleEdge->a - rightEdge->a);
-        double y1 = middleEdge->a * x1 + middleEdge->b;
+        double x1, y1;
+        if(rightEdge->xDirection == 0){
+            x1 = rightEdge->p.x;
+            y1 = middleEdge->a * x1 + middleEdge->b;
+        }
+        else if(middleEdge->xDirection == 0){
+            x1 = rightEdge->p.x;
+            y1 = rightEdge->a * x1 + rightEdge->b;
+        }else{
+            x1 = (rightEdge->b - middleEdge->b) / (middleEdge->a - rightEdge->a);
+            y1 = middleEdge->a * x1 + middleEdge->b;
+        }
 
         Event *event = rightEdge->event;
 
         double radius = Point::distance(Point(x1, y1), middleEdge->right->p);
 
         if ((rightEdge->xDirection > 0 && x1 > rightEdge->p.x) ||
-            (rightEdge->xDirection < 0 && x1 < rightEdge->p.x)) {
+            (rightEdge->xDirection < 0 && x1 < rightEdge->p.x) ||
+                rightEdge->xDirection == 0) {
             if ((y1 - radius) < sweepY && (y1 - radius) >= rectangleMinY) {
                 if (middleEdge->event == nullptr || (middleEdge->event != nullptr &&
                                                      Point::distance(Point(middleEdge->event->p.x,
@@ -435,12 +477,13 @@ void Voronoi::siteEvent() {
 
             parabolaCopy->p = parabola->p;
             parabolaCopy->left = newEdgeRight;
-            parabolaCopy->right = nullptr;
+            parabolaCopy->right = parabola->right;
 
             newParabola->p = points[pointIter];
             newParabola->left = newEdgeLeft;
             newParabola->right = newEdgeRight;
 
+            parabola->right->left = parabolaCopy;
             parabola->right = newEdgeLeft;
 
             //dodajemy event
@@ -451,6 +494,14 @@ void Voronoi::siteEvent() {
 
             newEvent->p = Point(xEvent, yEvent - radius);
             newEvent->radius = radius;
+            if(points[pointIter].x < middleEdge->p.x){
+                newEvent->edge1 = newEdgeRight;
+                newEvent->edge2 = middleEdge;
+            }else{
+                newEvent->edge1 = middleEdge;
+                newEvent->edge2 = newEdgeLeft;
+            }
+
             Event::insertEvent(&firstEvent, &newEvent);
         }
     } else { //mamy co najmniej trzy parabole
@@ -485,9 +536,6 @@ void Voronoi::searchForParabola() {
         b2 = -(temp2->p.x / (2 * p));
         c2 = (temp2->p.x * temp2->p.x / (4 * p)) + k;
 
-        //TODO przypadek kiedy wszystkie parabole sa rownolegle (a1 = a2)
-        //TODO przypadek gdy dodajemy kolejna parabole o tym samym y
-
         delta = (b2 - leftEdge->a) * (b2 - leftEdge->a) - 4 * a2 * (c2 - leftEdge->b);
         if (leftEdge->xDirection < 0) //promien leci w lewo
             x1 = (leftEdge->a - b2 - sqrt(delta)) / (2 * a2); //punkt przeciecia na lewo
@@ -508,19 +556,40 @@ void Voronoi::searchForParabola() {
         if (points[pointIter].x > x1 && points[pointIter].x < x2) { //znalazlem parabole (temp2)
 
             insertParabola(temp2);
-
             break;
+
         } else if (points[pointIter].x < x1) { //znalazlem parabole (temp1)
 
             insertParabola(temp1);
-
             break;
 
-        } else if (temp3->right == nullptr && points[pointIter].x > x2) { //znalazlem parabole (temp3)
+        } else if (temp3->right == nullptr && points[pointIter].x > x2 && temp3->p.y > sweepY) { //znalazlem parabole (temp3)
 
             insertParabola(temp3);
-
             break;
+
+        }else if (temp3->right == nullptr && temp3->p.y == sweepY) { //kolejna parabola o tym samym y
+            Parabola *newParabola = new Parabola();
+            Edge *newEdge = new Edge();
+
+            newParabola->p = points[pointIter];
+            newParabola->left = newEdge;
+            newParabola->right = nullptr;
+
+            newEdge->p.x = (temp3->p.x + points[pointIter].x) / 2;
+            newEdge->p.y = rectangleMaxY;
+            newEdge->xDirection = 0;
+            newEdge->event = nullptr;
+            newEdge->left = temp3;
+            newEdge->right = newParabola;
+
+            newParabola->right = newEdge;
+
+        }else if(points[pointIter].x == x1 || points[pointIter].x == x2) { //punkt trafil dokladnie w przeciecie parabol
+            if(points[pointIter].x == x1)
+                insertCrossingParabola(temp1, temp2, a2 * x1 * x1 + b2 * x1 + c2);
+            else
+                insertCrossingParabola(temp2, temp3, a2 * x2 * x2 + b2 * x2 + c2);
         }
 
         if (temp3->right == nullptr) //jesli koniec
@@ -536,6 +605,53 @@ void Voronoi::searchForParabola() {
             temp3 = rightEdge->right;
         }
     }
+}
+
+void Voronoi::insertCrossingParabola(Parabola *leftParabola, Parabola *rightParabola, double y0) {
+    Parabola *newParabola = new Parabola();
+    Edge *newLeftEdge = new Edge();
+    Edge *newRightEdge = leftParabola->right;
+
+    Event *oldEvent = newRightEdge->event;
+    if(oldEvent != nullptr)
+        Event::removeEvent(&firstEvent, &oldEvent);
+
+    newParabola->left = newLeftEdge;
+    newParabola->right = newRightEdge;
+    newParabola->p = points[pointIter];
+
+    double a, b;
+    a = (leftParabola->p.x - newParabola->p.x) / (newParabola->p.y - leftParabola->p.y);
+    b = (leftParabola->p.y + newParabola->p.y) / 2 - a * (leftParabola->p.x + newParabola->p.x) / 2;
+
+    newLeftEdge->left = newRightEdge->left;
+    newLeftEdge->right = newParabola;
+    newLeftEdge->event = nullptr;
+    newLeftEdge->p = Point(points[pointIter].x, y0);
+    newLeftEdge->xDirection = -1;
+    newLeftEdge->a = a;
+    newLeftEdge->b = b;
+
+    a = (rightParabola->p.x - newParabola->p.x) / (newParabola->p.y - rightParabola->p.y);
+    b = (rightParabola->p.y + newParabola->p.y) / 2 - a * (rightParabola->p.x + newParabola->p.x) / 2;
+
+    newRightEdge->left->right = newLeftEdge;
+    newRightEdge->left = newParabola;
+    newRightEdge->event = nullptr;
+    newRightEdge->p = Point(points[pointIter].x, y0);
+    newRightEdge->xDirection = 1;
+    newRightEdge->a = a;
+    newRightEdge->b = b;
+
+    //sprawdzenie eventu po prawej stronie:
+    //przeciecie sasiednich promieni:
+    if(rightParabola->right != nullptr)
+        checkRightEvent(newRightEdge, rightParabola->right);
+
+    //sprawdzenie eventu po lewej stronie:
+    //przeciecie sasiednich promieni:
+    if(leftParabola->left != nullptr)
+        checkLeftEvent(leftParabola->left, newLeftEdge);
 }
 
 void Voronoi::insertParabola(Parabola *parabola) {
@@ -589,7 +705,17 @@ void Voronoi::insertParabola(Parabola *parabola) {
 
 void Voronoi::checkRightEvent(Edge *newRightEdge, Edge *rightEdge) {
 
-    double x1 = (newRightEdge->b - rightEdge->b) / (rightEdge->a - newRightEdge->a);
+    if(newRightEdge->xDirection == 0 && rightEdge->xDirection == 0)
+        return;
+
+    if(newRightEdge->a == rightEdge->a)
+        return;
+
+    double x1;
+    if(rightEdge->xDirection == 0)
+        x1 = rightEdge->p.x;
+    else
+        x1 = (newRightEdge->b - rightEdge->b) / (rightEdge->a - newRightEdge->a);
     double y1 = newRightEdge->a * x1 + newRightEdge->b;
 
     Event *event = rightEdge->event;
@@ -597,26 +723,15 @@ void Voronoi::checkRightEvent(Edge *newRightEdge, Edge *rightEdge) {
     double radius = Point::distance(Point(x1, y1), points[pointIter]);
 
     if ((rightEdge->xDirection > 0 && x1 > rightEdge->p.x) ||
-        (rightEdge->xDirection < 0 && x1 < rightEdge->p.x)) {
-        if (event == nullptr && (y1 - radius) < sweepY &&
-            (y1 - radius) >= rectangleMinY) { //przypisujemy swoj event
-            event = new Event();
-            //TODO usunalem epsilon
-            event->radius = radius;
-            event->p = Point(x1, y1 - radius);
-            event->edge1 = newRightEdge;
-            event->edge2 = rightEdge;
-            newRightEdge->event = event;
-            rightEdge->event = event;
-            Event::insertEvent(&firstEvent, &event);
-        }
-            //najpierw usuwamy event (jesli mozemy), potem przypisujemy swoj
-        else if (event != nullptr && (y1 - radius) < sweepY &&
-                 (y1 - radius) >= rectangleMinY) { // && y1 > (event->p.y + event->radius)) {
-            if (Point::distance(Point(event->p.x, event->p.y + event->radius), points[pointIter]) <
-                event->radius) {
-                Event::removeEvent(&firstEvent, &event);
-                //TODO usunalem epsilon
+        (rightEdge->xDirection < 0 && x1 < rightEdge->p.x) ||
+            rightEdge->xDirection == 0) {
+        if ((y1 - radius) < sweepY && (y1 - radius) >= rectangleMinY) { //przypisujemy swoj event
+            if (event == nullptr ||
+                (event != nullptr && Point::distance(Point(event->p.x, event->p.y + event->radius), points[pointIter]) <
+                                     event->radius)) {
+
+                if (event != nullptr)
+                    Event::removeEvent(&firstEvent, &event);
 
                 Event *newEvent = new Event();
                 newEvent->radius = radius;
@@ -632,34 +747,33 @@ void Voronoi::checkRightEvent(Edge *newRightEdge, Edge *rightEdge) {
 }
 
 void Voronoi::checkLeftEvent(Edge *leftEdge, Edge *newLeftEdge) {
-    double x1 = (leftEdge->b - newLeftEdge->b) / (newLeftEdge->a - leftEdge->a);
-    double y1 = leftEdge->a * x1 + leftEdge->b;
+
+    if(leftEdge->xDirection == 0 && newLeftEdge->xDirection == 0)
+        return;
+
+    if(leftEdge->a == newLeftEdge->a)
+        return;
+
+    double x1;
+    if(leftEdge->xDirection == 0)
+        x1 = leftEdge->p.x;
+    else
+        x1 = (leftEdge->b - newLeftEdge->b) / (newLeftEdge->a - leftEdge->a);
+    double y1 = newLeftEdge->a * x1 + newLeftEdge->b;
 
     Event *event = leftEdge->event;
 
     double radius = Point::distance(Point(x1, y1), points[pointIter]);
 
     if ((leftEdge->xDirection > 0 && x1 > leftEdge->p.x) ||
-        (leftEdge->xDirection < 0 && x1 < leftEdge->p.x)) {
-        if (event == nullptr && (y1 - radius) < sweepY &&
-            (y1 - radius) >= rectangleMinY) { //przypisujemy swoj event
-            event = new Event();
-            //TODO usunalem epsilon
-            event->radius = radius;
-            event->p = Point(x1, y1 - radius);
-            event->edge1 = leftEdge;
-            event->edge2 = newLeftEdge;
-            newLeftEdge->event = event;
-            leftEdge->event = event;
-            Event::insertEvent(&firstEvent, &event);
-        }
-            //najpierw usuwamy event (jesli mozemy), potem przypisujemy swoj
-        else if (event != nullptr && (y1 - radius) < sweepY &&
-                 (y1 - radius) >= rectangleMinY) { //&& y1 > (event->p.y + event->radius)) {
-            if (Point::distance(Point(event->p.x, event->p.y + event->radius), points[pointIter]) <
-                event->radius) {
-                Event::removeEvent(&firstEvent, &event);
-                //TODO usunalem epsilon
+        (leftEdge->xDirection < 0 && x1 < leftEdge->p.x) ||
+            leftEdge->xDirection == 0) {
+        if ((y1 - radius) < sweepY && (y1 - radius) >= rectangleMinY) { //przypisujemy swoj event
+            if (event == nullptr || (event != nullptr && Point::distance(Point(event->p.x, event->p.y + event->radius), points[pointIter]) <
+                event->radius)) {
+
+                if(event != nullptr)
+                    Event::removeEvent(&firstEvent, &event);
 
                 Event *newEvent = new Event();
                 newEvent->radius = radius;
