@@ -28,6 +28,10 @@ private:
     void siteEvent();
     void calculateEdgeCrossing(Edge *leftEdge, Edge *middleEdge, Edge *rightEdge);
     void generatePoints(int howMany, double minX, double maxX, double minY, double maxY);
+    void searchForParabola();
+    void insertParabola(Parabola *parabola);
+    void checkRightEvent(Edge *newRightEdge, Edge *rightEdge);
+    void checkLeftEvent(Edge *leftEdge, Edge *newLeftEdge);
 
 public:
     void calculateBrute();
