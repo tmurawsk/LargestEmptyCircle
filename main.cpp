@@ -9,10 +9,11 @@ vector<Point> readPoints(string filename);
 void mode1(Voronoi *voronoi, char **argv);
 void mode2(Voronoi *voronoi, char **argv);
 void mode3(Voronoi *voronoi, char **argv);
+void mode4(Voronoi *voronoi, char **argv);
 
 int main(int argc, char **argv) {
 
-    if(argc < 2 || atoi(argv[1]) < 1 || atoi(argv[1]) > 3){
+    if(argc < 2 || atoi(argv[1]) < 1 || atoi(argv[1]) > 4){
         cout << "NIEPRAWIDLOWA KOMENDA!\nPoprawna forma:" << endl;
         cout << "./largestEmptyCircle [tryb] [lista_parametrow]" << endl;
         cout << "Wiecej informacji w pliku readme.txt" << endl;
@@ -25,7 +26,7 @@ int main(int argc, char **argv) {
     Voronoi *voronoi = new Voronoi();
 
     switch(mode){
-        case 1:     //punkty z pliku .txt
+        case 1:     //points from .txt file
             if(argc < 7){
                 cout << "BLEDNA LICZBA PARAMETROW!" << endl;
                 return -2;
@@ -33,7 +34,7 @@ int main(int argc, char **argv) {
             mode1(voronoi, argv);
             break;
 
-        case 2:
+        case 2:     //random-generated points
             if(argc < 7){
                 cout << "BLEDNA LICZBA PARAMETROW!" << endl;
                 return -2;
@@ -41,12 +42,20 @@ int main(int argc, char **argv) {
             mode2(voronoi, argv);
             break;
 
-        case 3:
+        case 3:     //random-generated points with time measure for both algorithms
             if(argc < 10){
                 cout << "BLEDNA LICZBA PARAMETROW!" << endl;
                 return -2;
             }
             mode3(voronoi, argv);
+            break;
+
+        case 4:     //random-generated points with time measure, only for Fortune
+            if(argc < 10){
+                cout << "BLEDNA LICZBA PARAMETROW!" << endl;
+                return -2;
+            }
+            mode4(voronoi, argv);
             break;
     }
 
@@ -102,8 +111,6 @@ void mode3(Voronoi *voronoi, char **argv){
     std::chrono::duration<double> duration = end - start;
     double durationAvgFortune;
     double durationAvgBrute;
-    double radiusFortune;
-    double radiusBrute;
 
 
     for(int i = 0; i < howManyTimes; i++){
@@ -116,20 +123,17 @@ void mode3(Voronoi *voronoi, char **argv){
             voronoi->calculateFortune();
             end = std::chrono::system_clock::now();
 
-	    radiusFortune = voronoi->maxRadius;
             duration = end - start;
+//            file << nStart << "\t" << duration.count() << "\t";
             durationAvgFortune += duration.count();
 
             start = std::chrono::system_clock::now();
             voronoi->calculateBrute();
             end = std::chrono::system_clock::now();
 
-	    radiusBrute = voronoi->maxRadius;
             duration = end - start;
+//            file << duration.count() << endl;
             durationAvgBrute += duration.count();
-
-	    cout << "Fortune's radius: " << radiusFortune << endl;
-	    cout << "Brute's radius: " << radiusBrute << endl;
 
             voronoi->points.clear();
             delete voronoi;
@@ -139,6 +143,65 @@ void mode3(Voronoi *voronoi, char **argv){
         }
         file << nStart << "\t" << durationAvgFortune/generation << "\t" << durationAvgBrute/generation << "\n";
         nStart += interval;
+        file << endl;
+    }
+
+    file.close();
+
+}
+
+void mode4(Voronoi *voronoi, char **argv){
+    voronoi->loadLimits(atof(argv[2]), atof(argv[3]), atof(argv[4]), atof(argv[5]));
+    int nStart = atoi(argv[6]);
+    int interval = atoi(argv[7]);
+    int howManyTimes = atoi(argv[8]);
+    int generation = atoi(argv[9]);
+
+    fstream file;
+    file.open("out.txt", ios::out);
+    if(!file.good()){
+        cout << "BLAD OTWARCIA PLIKU out.txt !" << endl;
+        exit(-1);
+    }
+
+    file << "N\tFortune" << endl;
+    auto start = std::chrono::system_clock::now();
+    auto end = std::chrono::system_clock::now();
+    std::chrono::duration<double> duration = end - start;
+    double durationAvgFortune;
+    double durationAvgBrute;
+
+
+    for(int i = 0; i < howManyTimes; i++){
+        durationAvgFortune = 0;
+        durationAvgBrute = 0;
+        for(int j = 0; j < generation; j++){
+            voronoi->generatePoints(nStart);
+
+            start = std::chrono::system_clock::now();
+            voronoi->calculateFortune();
+            end = std::chrono::system_clock::now();
+
+            duration = end - start;
+            //file << nStart << "\t" << duration.count() << "\n";
+            durationAvgFortune += duration.count();
+
+            start = std::chrono::system_clock::now();
+            //voronoi->calculateBrute();
+            end = std::chrono::system_clock::now();
+
+            duration = end - start;
+            //file << duration.count() << endl;
+            durationAvgBrute += duration.count();
+
+            voronoi->points.clear();
+            delete voronoi;
+            voronoi = new Voronoi();
+            voronoi->loadLimits(atof(argv[2]), atof(argv[3]), atof(argv[4]), atof(argv[5]));
+
+        }
+        file << nStart << "\t" << durationAvgFortune/generation;// << "\t" << durationAvgBrute/generation << "\n";
+                nStart += interval;
         file << endl;
     }
 

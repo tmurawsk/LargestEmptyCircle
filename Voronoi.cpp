@@ -159,7 +159,7 @@ void Voronoi::circleEvent() {
     //deleting temp2 and rightEdge, modifying leftEdge as a new edge
     //final situation: temp1 - leftEdge - temp3
 
-    //calculating direction od the new edge:
+    //calculating direction od the new edge
     int direction;
     double a = (temp1->p.y - temp3->p.y) / (temp1->p.x - temp3->p.x);
     double b = temp1->p.y - a * temp1->p.x;
@@ -335,8 +335,8 @@ void Voronoi::calculateEdgeCrossing(Edge *leftEdge, Edge *middleEdge, Edge *righ
 void Voronoi::siteEvent() {
     sweepY = points[pointIter].y;
 
-    if (firstParabola->right == nullptr) {  //mamy tylko jedna parabole
-        if (firstParabola->p.y == points[pointIter].y) { //parabola o tym samym y
+    if (firstParabola->right == nullptr) {  //there is only one parabola in the beach line
+        if (firstParabola->p.y == points[pointIter].y) { //new parabola has the same Y coordinate
             Parabola *newParabola = new Parabola();
             Edge *newEdge = new Edge();
 
@@ -351,7 +351,7 @@ void Voronoi::siteEvent() {
             newParabola->right = nullptr;
 
             firstParabola->right = newEdge;
-        } else { //parabola o roznym y
+        } else { //parabola with different Y coordinate than first parabola
             Parabola *parabolaCopy = new Parabola();
             Parabola *newParabola = new Parabola();
             Edge *newEdgeLeft = new Edge();
@@ -363,6 +363,7 @@ void Voronoi::siteEvent() {
             b0 = (firstParabola->p.y + points[pointIter].y) / 2 -
                  a0 * (firstParabola->p.x + points[pointIter].x) / 2;
 
+            //calculating parameters of the parabola
             k = (firstParabola->p.y + sweepY) / 2;
             p = (firstParabola->p.y - sweepY) / 2;
             a1 = 1 / (4 * p);
@@ -371,6 +372,7 @@ void Voronoi::siteEvent() {
 
             y0 = a1 * points[pointIter].x * points[pointIter].x + b1 * points[pointIter].x + c1;
 
+            //setting up new parabola and edges
             newEdgeLeft->p = newEdgeRight->p = Point(points[pointIter].x, y0);
             newEdgeLeft->a = newEdgeRight->a = a0;
             newEdgeLeft->b = newEdgeRight->b = b0;
@@ -393,12 +395,12 @@ void Voronoi::siteEvent() {
 
             firstParabola->right = newEdgeLeft;
         }
-    } else if (firstParabola->right->right->right == nullptr) { //mamy tylko dwie parabole (o rownym y)
+    } else if (firstParabola->right->right->right == nullptr) { //there are two parabolas with equal Y in beach line
         Edge *middleEdge = firstParabola->right;
         Parabola *secondParabola = middleEdge->right;
         Parabola *newParabola = new Parabola();
 
-        if (points[pointIter].y == secondParabola->p.y) { //trzeci punkt o tym samym y
+        if (points[pointIter].y == secondParabola->p.y) { //the following point also has the same Y as the rest of parabolas
             Edge *newEdge = new Edge();
 
             newEdge->p.x = (points[pointIter].x + secondParabola->p.x) / 2;
@@ -413,7 +415,7 @@ void Voronoi::siteEvent() {
             newParabola->right = nullptr;
 
             secondParabola->right = newEdge;
-        } else { //trzeci punkt o roznym y
+        } else { //the following point has different Y than the first two
             Edge *newEdgeLeft = new Edge();
             Edge *newEdgeRight = new Edge();
             Parabola *parabolaCopy = new Parabola();
@@ -422,10 +424,10 @@ void Voronoi::siteEvent() {
 
             double a0, b0, y0, a1, b1, c1, k, p, xEvent, yEvent, radius;
 
-            if (points[pointIter].x < middleEdge->p.x) { //lewa parabola
+            if (points[pointIter].x < middleEdge->p.x) { //point is under the left parabola
                 parabola = firstParabola;
                 newEdgeRight->event = newEvent;
-            } else { //prawa parabola
+            } else {                                     //under right parabola
                 parabola = secondParabola;
                 newEdgeLeft->event = newEvent;
             }
@@ -466,7 +468,7 @@ void Voronoi::siteEvent() {
             parabola->right->left = parabolaCopy;
             parabola->right = newEdgeLeft;
 
-            //dodajemy event
+            //adding circle event
             xEvent = middleEdge->p.x;
             yEvent = a0 * xEvent + b0;
 
@@ -484,7 +486,7 @@ void Voronoi::siteEvent() {
 
             Event::insertEvent(&firstEvent, &newEvent);
         }
-    } else { //mamy co najmniej trzy parabole
+    } else { //there are three or more parabolas in beach line
         searchForParabola();
     }
     pointIter++;
@@ -499,7 +501,7 @@ void Voronoi::searchForParabola() {
     Edge *rightEdge = temp2->right;
     Parabola *temp3 = rightEdge->right;
 
-    double a0, b0, a1, b1, c1, a2, b2, c2, a3, b3, c3, k, p, delta, x1, y1, x2, y2;
+    double a2, b2, c2, k, p, delta, x1, x2, y2;
 
     while(1) {
         k = (temp2->p.y + sweepY) / 2;
@@ -509,38 +511,38 @@ void Voronoi::searchForParabola() {
         c2 = (temp2->p.x * temp2->p.x / (4 * p)) + k;
 
         delta = (b2 - leftEdge->a) * (b2 - leftEdge->a) - 4 * a2 * (c2 - leftEdge->b);
-        if (leftEdge->xDirection < 0) //promien leci w lewo
-            x1 = (leftEdge->a - b2 - sqrt(delta)) / (2 * a2); //punkt przeciecia na lewo
+        if (leftEdge->xDirection < 0) //edge goes left
+            x1 = (leftEdge->a - b2 - sqrt(delta)) / (2 * a2); //crossing point on the left
         else if (leftEdge->xDirection > 0)
-            x1 = (leftEdge->a - b2 + sqrt(delta)) / (2 * a2); //punkt przeciecia na prawo
+            x1 = (leftEdge->a - b2 + sqrt(delta)) / (2 * a2); //crossing point on the right
         else
-            x1 = leftEdge->p.x; //jest pionowy
+            x1 = leftEdge->p.x; //edge is vertical
 
         delta = (b2 - rightEdge->a) * (b2 - rightEdge->a) - 4 * a2 * (c2 - rightEdge->b);
-        if (rightEdge->xDirection < 0) //promien leci w lewo
-            x2 = (rightEdge->a - b2 - sqrt(delta)) / (2 * a2); //punkt przeciecia na lewo
+        if (rightEdge->xDirection < 0) //edge goes right
+            x2 = (rightEdge->a - b2 - sqrt(delta)) / (2 * a2); //crossing point on the left
         else if (rightEdge->xDirection > 0)
-            x2 = (rightEdge->a - b2 + sqrt(delta)) / (2 * a2); //punkt przeciecia na prawo
+            x2 = (rightEdge->a - b2 + sqrt(delta)) / (2 * a2); //crossing point on the right
         else
-            x2 = rightEdge->p.x; //jest pionowy
+            x2 = rightEdge->p.x; //edge is vertical
 
-        //sprawdzamy czy trafilismy na odpowiednia parabole:
-        if (points[pointIter].x > x1 && points[pointIter].x < x2) { //znalazlem parabole (temp2)
+        //checking whether we found the appropriate parabola or not
+        if (points[pointIter].x > x1 && points[pointIter].x < x2) { //found parabola (temp2 - middle one)
 
             insertParabola(temp2);
             break;
 
-        } else if (points[pointIter].x < x1) { //znalazlem parabole (temp1)
+        } else if (points[pointIter].x < x1) { //found parabola (temp1 - left one)
 
             insertParabola(temp1);
             break;
 
-        } else if (temp3->right == nullptr && points[pointIter].x > x2 && temp3->p.y > sweepY) { //znalazlem parabole (temp3)
+        } else if (temp3->right == nullptr && points[pointIter].x > x2 && temp3->p.y > sweepY) { //found parabola (temp3 - right one)
 
             insertParabola(temp3);
             break;
 
-        }else if (temp3->right == nullptr && temp3->p.y == sweepY) { //kolejna parabola o tym samym y
+        }else if (temp3->right == nullptr && temp3->p.y == sweepY) { //third or more parabola with the same Y as previous
             Parabola *newParabola = new Parabola();
             Edge *newEdge = new Edge();
 
@@ -557,19 +559,19 @@ void Voronoi::searchForParabola() {
 
             newParabola->right = newEdge;
 
-        }else if(points[pointIter].x == x1 || points[pointIter].x == x2) { //punkt trafil dokladnie w przeciecie parabol
+        }else if(points[pointIter].x == x1 || points[pointIter].x == x2) { //point is directly under the crossing point of two other parabolas
             if(points[pointIter].x == x1)
                 insertCrossingParabola(temp1, temp2, a2 * x1 * x1 + b2 * x1 + c2);
             else
                 insertCrossingParabola(temp2, temp3, a2 * x2 * x2 + b2 * x2 + c2);
         }
 
-        if (temp3->right == nullptr) //jesli koniec
+        if (temp3->right == nullptr) //end of search
             break;
         else if (temp3->right != nullptr) {
-            if (temp3->right->right->right != nullptr) //sa dwa wolne
+            if (temp3->right->right->right != nullptr) //if we can jump two parabolas ahead
                 temp1 = temp3;
-            else //jest tylko jedno wolne
+            else //we can jump only one parabola ahead
                 temp1 = temp2;
             leftEdge = temp1->right;
             temp2 = leftEdge->right;
@@ -615,13 +617,11 @@ void Voronoi::insertCrossingParabola(Parabola *leftParabola, Parabola *rightPara
     newRightEdge->a = a;
     newRightEdge->b = b;
 
-    //sprawdzenie eventu po prawej stronie:
-    //przeciecie sasiednich promieni:
+    //checking potential event on the right
     if(rightParabola->right != nullptr)
         checkRightEvent(newRightEdge, rightParabola->right);
 
-    //sprawdzenie eventu po lewej stronie:
-    //przeciecie sasiednich promieni:
+    //checking potential event on the left
     if(leftParabola->left != nullptr)
         checkLeftEvent(leftParabola->left, newLeftEdge);
 }
@@ -662,13 +662,11 @@ void Voronoi::insertParabola(Parabola *parabola) {
     newRightEdge->left = newParabola;
     newRightEdge->right = copyParabola;
 
-    //sprawdzenie eventu po prawej stronie:
-    //przeciecie sasiednich promieni:
+    //checking potential event on the right
     if(copyParabola->right != nullptr)
         checkRightEvent(newRightEdge, copyParabola->right);
 
-    //sprawdzenie eventu po lewej stronie:
-    //przeciecie sasiednich promieni:
+    //checking potential event on the left
     if(parabola->left != nullptr)
         checkLeftEvent(parabola->left, newLeftEdge);
 }
@@ -738,7 +736,7 @@ void Voronoi::checkLeftEvent(Edge *leftEdge, Edge *newLeftEdge) {
     if ((leftEdge->xDirection > 0 && x1 > leftEdge->p.x) ||
         (leftEdge->xDirection < 0 && x1 < leftEdge->p.x) ||
             leftEdge->xDirection == 0) {
-        if ((y1 - radius) < sweepY && (y1 - radius) >= rectangleMinY) { //przypisujemy swoj event
+        if ((y1 - radius) < sweepY && (y1 - radius) >= rectangleMinY) { //assigning our event
             if (event == nullptr || (event != nullptr && Point::distance(Point(event->p.x, event->p.y + event->radius), points[pointIter]) <
                 event->radius)) {
 
@@ -757,23 +755,3 @@ void Voronoi::checkLeftEvent(Edge *leftEdge, Edge *newLeftEdge) {
         }
     }
 }
-
-
-//void Voronoi::calculateCircle2Points() {
-//    Point p1, p2, p3;
-//    double a, b, xs, ys, radius;
-//    int size = points.size();
-//    maxCircleX = maxCircleY = maxRadius = 0;
-//
-//    for(int i = 0; i < size; i++){
-//        p1 = points[i];
-//        for(int j = i+1; j < size; j++){
-//            p2 = points[j];
-//
-//            a = (p1.x - p2.x) / (p2.y - p1.y);
-//            b = (p1.y + p2.y) / 2 - a * (p1.x+ p2.x) / 2;
-//
-//        }
-//    }
-//
-//}

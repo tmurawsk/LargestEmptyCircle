@@ -5,13 +5,14 @@
 #include "Edge.h"
 
 typedef struct Event {
-    Point p;    //trigger point
+    Point p;        //trigger point
     double radius;
     Edge *edge1;
     Edge *edge2;
     Event *next;
     Event *prev;
 
+    //inserting event into queue
     static void insertEvent(Event **beg, Event **act) {
         if (*beg == nullptr) {
             *beg = *act;
@@ -45,6 +46,7 @@ typedef struct Event {
         }
     }
 
+    //removing event from queue
     static void removeEvent(Event **beg, Event **act) {
         if ((*beg) == nullptr || (*act) == nullptr)
             return;
